@@ -2,7 +2,7 @@ OUTPUT=kernel
 
 include common.mk
 
-SUBDIRS=core keyboard #video
+SUBDIRS=core keyboard video
 
 .PHONY: $(SUBDIRS)
 
