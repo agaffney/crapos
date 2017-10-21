@@ -3,7 +3,7 @@ include common.mk
 OUTPUT=kernel
 DEPS=core keyboard #video
 
-all: $(OUTPUT)
+all: clean $(OUTPUT)
 
 $(foreach I,$(DEPS),$I/$I.o):
 	make -C $(dir $@)
