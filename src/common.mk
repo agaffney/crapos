@@ -13,7 +13,7 @@ endef
 CC=gcc
 CFLAGS=-m32 -fno-stack-protector
 LD=ld
-LDFLAGS=-m elf_i386 -T $(call base_dir)link.ld
+LDFLAGS=-m elf_i386 --oformat elf32-i386
 NASM=nasm
 NASM_FLAGS=-f elf32
 

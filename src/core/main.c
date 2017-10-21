@@ -1,24 +1,18 @@
-#include "keyboard_map.h"
-
 /* there are 25 lines each of 80 columns; each element takes 2 bytes */
 #define LINES 25
 #define COLUMNS_IN_LINE 80
 #define BYTES_FOR_EACH_ELEMENT 2
 #define SCREENSIZE BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE * LINES
 
-#define KEYBOARD_DATA_PORT 0x60
-#define KEYBOARD_STATUS_PORT 0x64
 #define IDT_SIZE 256
 #define INTERRUPT_GATE 0x8e
 #define KERNEL_CODE_SEGMENT_OFFSET 0x08
 
 #define ENTER_KEY_CODE 0x1C
 
-extern unsigned char keyboard_map[128];
 extern void keyboard_handler(void);
-extern char read_port(unsigned short port);
-extern void write_port(unsigned short port, unsigned char data);
 extern void load_idt(unsigned long *idt_ptr);
+extern void kb_init(void);
 
 /* current cursor location */
 unsigned int current_loc = 0;
@@ -103,12 +97,6 @@ void idt_init(void)
 	load_idt(idt_ptr);
 }
 
-void kb_init(void)
-{
-	/* 0xFD is 11111101 - enables only IRQ1 (keyboard)*/
-	write_port(0x21 , 0xFD);
-}
-
 void kprint(const char *str)
 {
 	unsigned int i = 0;
@@ -133,20 +121,3 @@ void clear_screen(void)
 	}
 }
 
-void keyboard_handler_main(void) {
-	unsigned char status;
-	char keycode;
-
-	/* write EOI */
-	write_port(0x20, 0x20);
-
-	status = read_port(KEYBOARD_STATUS_PORT);
-	/* Lowest bit of status will be set if buffer is not empty */
-	if (status & 0x01) {
-		keycode = read_port(KEYBOARD_DATA_PORT);
-		if(keycode < 0)
-			return;
-		vidptr[current_loc++] = keyboard_map[keycode];
-		vidptr[current_loc++] = 0x07;	
-	}
-}
