@@ -11,7 +11,7 @@ define mkfile_dirname
 endef
 
 CC=gcc
-CFLAGS=-m32 -fno-stack-protector -O0
+CFLAGS=-m32 -fno-stack-protector
 LD=ld
 LDFLAGS=-m elf_i386 -T $(call base_dir)link.ld
 NASM=nasm
@@ -19,3 +19,9 @@ NASM_FLAGS=-f elf32
 
 OUTPUT=$(call mkfile_dirname).o
 
+.PHONY: default
+
+default: all
+
+clean:
+	-rm *.o
