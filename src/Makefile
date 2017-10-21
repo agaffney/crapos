@@ -1,18 +1,21 @@
+OUTPUT=kernel
+
 include common.mk
 
-OUTPUT=kernel
-DEPS=core keyboard #video
+SUBDIRS=core keyboard #video
 
-all: clean $(OUTPUT)
+.PHONY: $(SUBDIRS)
 
-$(foreach I,$(DEPS),$I/$I.o):
-	make -C $(dir $@)
+$(SUBDIRS):
+	$(MAKE) -C $@
 
-$(OUTPUT): $(foreach I,$(DEPS),$I/$I.o)
-	$(LD) $(LDFLAGS) -T $(BASE_DIR)link.ld -o $(OUTPUT) $^
+$(OUTPUT): $(SUBDIRS)
+	$(LD) $(LDFLAGS) -T $(BASE_DIR)link.ld -o $(OUTPUT) $(foreach I,$(SUBDIRS),$I/$I.o)
 
-clean: $(addprefix clean-dep-, $(DEPS))
+.PHONY: clean clean-dep-%
+
+clean: $(addprefix clean-dep-, $(SUBDIRS))
 	rm -f $(OUTPUT)
 
 clean-dep-%:
-	make -C $(subst clean-dep-,,$@) clean-local
+	$(MAKE) -C $(subst clean-dep-,,$@) clean-local
