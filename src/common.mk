@@ -1,14 +1,6 @@
-define base_dir
-	$(dir $(lastword $(MAKEFILE_LIST)))
-endef
-
-define cwd
-	$(dir $(firstword $(MAKEFILE_LIST)))
-endef
-
-define mkfile_dirname
-	$(shell basename $(abspath $(dir $(firstword $(MAKEFILE_LIST)))))
-endef
+BASEDIR=$(dir $(lastword $(MAKEFILE_LIST)))
+CWD=$(dir $(firstword $(MAKEFILE_LIST)))
+MKFILE_DIRNAME=$(shell basename $(abspath $(dir $(firstword $(MAKEFILE_LIST)))))
 
 CC=gcc
 CFLAGS=-m32 -fno-stack-protector
@@ -17,11 +9,11 @@ LDFLAGS=-m elf_i386 --oformat elf32-i386
 NASM=nasm
 NASM_FLAGS=-f elf32
 
-OUTPUT=$(call mkfile_dirname).o
+OUTPUT=$(MKFILE_DIRNAME).o
 
 .PHONY: default
 
 default: all
 
-clean:
-	-rm *.o
+clean-local:
+	rm -f *.o

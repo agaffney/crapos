@@ -9,10 +9,10 @@ $(foreach I,$(DEPS),$I/$I.o):
 	make -C $(dir $@)
 
 $(OUTPUT): $(foreach I,$(DEPS),$I/$I.o)
-	$(LD) $(LDFLAGS) -T $(call base_dir)link.ld -o $(OUTPUT) $^
+	$(LD) $(LDFLAGS) -T $(BASE_DIR)link.ld -o $(OUTPUT) $^
 
-clean-all: $(addprefix clean-dep-, $(DEPS))
-	-rm $(OUTPUT)
+clean: $(addprefix clean-dep-, $(DEPS))
+	rm -f $(OUTPUT)
 
 clean-dep-%:
-	make -C $(subst clean-dep-,,$@) clean
+	make -C $(subst clean-dep-,,$@) clean-local
