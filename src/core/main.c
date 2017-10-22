@@ -45,7 +45,6 @@ void idt_init(void)
 	IDT[0x21].zero = 0;
 	IDT[0x21].type_attr = 0x8e; /* INTERRUPT_GATE */
 	IDT[0x21].offset_higherbits = (keyboard_address & 0xffff0000) >> 16;
-	
 
 	/*     Ports
 	*	 PIC1	PIC2
@@ -83,6 +82,53 @@ void idt_init(void)
 	idt_ptr[0] = (sizeof (struct IDT_entry) * IDT_SIZE) + ((idt_address & 0xffff) << 16);
 	idt_ptr[1] = idt_address >> 16 ;
 
+	char hex_addr[50];
+	itoa(idt_address, hex_addr, 2);
+	kprint(hex_addr);
+	kprint_newline();
+	itoa(idt_address, hex_addr, 8);
+	kprint(hex_addr);
+	kprint_newline();
+	itoa(idt_address, hex_addr, 10);
+	kprint(hex_addr);
+	kprint_newline();
+	itoa(idt_address, hex_addr, 16);
+	kprint(hex_addr);
+	kprint_newline();
+
 	load_idt(idt_ptr);
+//	asm volatile ("lidtl (%0)\n\t" : : "g"(&idt_ptr));
 }
 
+void itoa(int input, char *output, int base) {
+	char buf[50];
+	int idx = 0, i;
+	int remainder;
+
+	while(input > 0) {
+		remainder = input % base;
+		// 48 for 0-9, 87 (97-10) for a-f
+		buf[idx++] = remainder + (remainder < 10 ? 48 : 87);
+		input = input / base;
+	}
+	// Pad out a binary number to 8 bytes
+	if(base == 2) {
+		for(i = (idx - 2) % 8; i > 0; i--) {
+			buf[idx++] = '0';
+		}
+	}
+	// Add '0' prefix to octal number
+	if(base == 8) {
+		buf[idx++] = '0';
+	}
+	// Add '0x' prefix to hex number
+	if(base == 16) {
+		buf[idx++] = 'x';
+		buf[idx++] = '0';
+	}
+
+	for(i = 0; i < idx; i++) {
+		output[i] = buf[idx - i - 1];
+	}
+	output[i] = 0;
+}

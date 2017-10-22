@@ -12,10 +12,10 @@ global start
 extern kmain	        ;kmain is defined in the c file
 
 start:
-  cli 			;block interrupts
-  mov esp, stack_space	;set stack pointer
-  call kmain
-  hlt		 	;halt the CPU
+	cli 			;block interrupts
+	mov esp, stack_space	;set stack pointer
+	call kmain
+	hlt		 	;halt the CPU
 
 global read_port
 
@@ -35,8 +35,10 @@ write_port:
 global load_idt
 
 load_idt:
+	; move last 4 bytes of stack (stack pointer "plus" 4, stack grows "down") into EDX (32-bit)
 	mov edx, [esp + 4]
 	lidt [edx]
+	; enable interrupts
 	sti
 	ret
 
