@@ -11,8 +11,16 @@ $(SUBDIRS):
 
 $(OUTPUT): $(SUBDIRS)
 	$(LD) $(LDFLAGS) -T $(BASE_DIR)link.ld -o $(OUTPUT) $(foreach I,$(SUBDIRS),$I/$I.o)
+	$(OBJCOPY) --only-keep-debug $(OUTPUT) $(OUTPUT).sym
+	$(STRIP) $(OUTPUT)
 
-.PHONY: clean clean-dep-%
+.PHONY: clean clean-dep-% run run-debug
+
+run: $(OUTPUT)
+	qemu-system-i386 -kernel $(OUTPUT)
+
+run-debug: $(OUTPUT)
+	qemu-system-i386 -monitor stdio -s -S -kernel $(OUTPUT)
 
 clean: $(addprefix clean-dep-, $(SUBDIRS))
 	rm -f $(OUTPUT)
