@@ -34,8 +34,7 @@ void kprint(const char *str)
 {
 	unsigned int i = 0;
 	while (str[i] != '\0') {
-		vidptr[current_loc++] = str[i++];
-		vidptr[current_loc++] = video_create_attribute_byte(VIDEO_COLOR_BLACK, VIDEO_COLOR_RED);
+		putch(str[i++]);
 	}
 }
 
@@ -52,8 +51,14 @@ void clear_screen(void)
 		vidptr[i++] = ' ';
 		vidptr[i++] = video_create_attribute_byte(VIDEO_COLOR_BLACK, VIDEO_COLOR_BLACK);
 	}
+	current_loc = 0;
 }
 
 char video_create_attribute_byte(enum video_colors bg, enum video_colors fg) {
 	return (bg << 4) + fg;
+}
+
+void putch(char c) {
+	vidptr[current_loc++] = c;
+	vidptr[current_loc++] = video_create_attribute_byte(VIDEO_COLOR_BLACK, VIDEO_COLOR_WHITE);
 }
