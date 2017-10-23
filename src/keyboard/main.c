@@ -19,7 +19,9 @@ void kb_init(void)
 
 void keyboard_handler_main(void) {
 	unsigned char status;
-	char keycode;
+	unsigned char keycode;
+	char addr[20];
+	int released = 0;
 
 	/* write EOI */
 	write_port(0x20, 0x20);
@@ -28,9 +30,27 @@ void keyboard_handler_main(void) {
 	/* Lowest bit of status will be set if buffer is not empty */
 	if (status & 0x01) {
 		keycode = read_port(KEYBOARD_DATA_PORT);
-		if(keycode < 0)
+//		if(keycode < 0)
+//			return;
+		// 0xE0 is a scancode prefix in set 1/2
+		if(keycode > 0x80 && keycode < 0xE0) {
+			// Strip off "released" flag to get real value
+			keycode -= 0x80;
+			released = 1;
+		}
+		if(keyboard_map[keycode] == 'c') {
+			clear_screen();
 			return;
+		}
+		itoa((int)keycode, addr, 16);
+		kprint(addr);
+		kprint("  ");
 		vidptr[current_loc++] = keyboard_map[keycode];
 		vidptr[current_loc++] = 0x07;
+		if(released) {
+			kprint(" (released)");
+			released = 0;
+		}
+		kprint_newline();
 	}
 }
