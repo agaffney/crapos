@@ -1,20 +1,15 @@
 OUTPUT=kernel
+SUBDIRS=arch keyboard video #core
+LD_EXTRA_FLAGS = -T link.ld
 
 include common.mk
 
-SUBDIRS=core keyboard video
-
-.PHONY: $(SUBDIRS)
-
-$(SUBDIRS):
-	$(MAKE) -C $@
-
 $(OUTPUT): $(SUBDIRS)
-	$(LD) $(LDFLAGS) -T $(BASE_DIR)link.ld -o $(OUTPUT) $(foreach I,$(SUBDIRS),$I/$I.o)
+	$(LD) $(LDFLAGS) -o $(OUTPUT) $(foreach I,$(SUBDIRS),$I/$I.o)
 	$(OBJCOPY) --only-keep-debug $(OUTPUT) $(OUTPUT).sym
 	$(STRIP) $(OUTPUT)
 
-.PHONY: clean clean-dep-% run run-debug
+.PHONY: run run-debug
 
 run: $(OUTPUT)
 	qemu-system-i386 -kernel $(OUTPUT)
@@ -22,8 +17,3 @@ run: $(OUTPUT)
 run-debug: $(OUTPUT)
 	qemu-system-i386 -monitor stdio -s -S -kernel $(OUTPUT)
 
-clean: $(addprefix clean-dep-, $(SUBDIRS))
-	rm -f $(OUTPUT)
-
-clean-dep-%:
-	$(MAKE) -C $(subst clean-dep-,,$@) clean-local
