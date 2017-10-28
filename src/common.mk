@@ -32,7 +32,7 @@ clean-subdir-%:
 	$(MAKE) -C $(subst clean-subdir-,,$@) clean
 
 clean: $(addprefix clean-subdir-, $(SUBDIRS))
-	rm -f $(OUTPUT) *.o
+	rm -f $(OUTPUT) *.o $(CLEAN_EXTRA)
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)

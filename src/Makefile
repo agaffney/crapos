@@ -1,6 +1,7 @@
 OUTPUT=kernel
 SUBDIRS=arch core
 LD_EXTRA_FLAGS = -T link.ld
+CLEAN_EXTRA = $(OUTPUT).sym
 
 include common.mk
 
