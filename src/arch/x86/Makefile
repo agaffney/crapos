@@ -1,6 +1,6 @@
 include ../../common.mk
 
-$(OUTPUT): init.o main.o keyboard.o
+$(OUTPUT): $(OBJECTS)
 	$(LD) $(LDFLAGS) -r -o $(OUTPUT) $^
 
 init.o: init.asm

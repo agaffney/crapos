@@ -1,4 +1,4 @@
 include ../common.mk
 
-$(OUTPUT): main.o
+$(OUTPUT): $(OBJECTS)
 	$(LD) $(LDFLAGS) -r -o $(OUTPUT) $^

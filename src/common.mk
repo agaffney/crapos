@@ -14,6 +14,8 @@ STRIP=strip
 # Default target is a .o file named after the current dir
 OUTPUT ?= $(MKFILE_DIRNAME).o
 
+OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c)) $(patsubst %.asm, %.o, $(wildcard *.asm))
+
 .PHONY: all
 all: $(OUTPUT)
 
