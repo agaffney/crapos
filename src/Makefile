@@ -1,5 +1,5 @@
 OUTPUT=kernel
-SUBDIRS=arch keyboard video #core
+SUBDIRS=arch video core
 LD_EXTRA_FLAGS = -T link.ld
 
 include common.mk

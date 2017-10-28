@@ -44,6 +44,15 @@ load_idt:
 	sti
 	ret
 
+global keyboard_handler
+extern keyboard_handler_main
+
+; We need to use the 'iretd' instruction when returning from an interrupt
+; handler, so we create a wrapper function to make sure this happens
+keyboard_handler:
+	call    keyboard_handler_main
+	iretd
+
 section .bss
 resb 8192		;8KB for stack
 stack_space:

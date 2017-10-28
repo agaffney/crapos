@@ -1,8 +1,4 @@
 include ../common.mk
 
-$(OUTPUT): init.o main.o
+$(OUTPUT): main.o
 	$(LD) $(LDFLAGS) -r -o $(OUTPUT) $^
-
-init.o: init.asm
-	$(NASM) $(NASM_FLAGS) $< -o $@
-
