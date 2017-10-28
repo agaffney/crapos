@@ -16,7 +16,9 @@ OUTPUT ?= $(MKFILE_DIRNAME).o
 
 OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c)) $(patsubst %.asm, %.o, $(wildcard *.asm))
 
+# Default target, make sure this is always the first target in this file
 .PHONY: all
+
 all: $(OUTPUT)
 
 ifdef SUBDIRS
