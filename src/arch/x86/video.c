@@ -1,39 +1,32 @@
 #include <arch/x86/video.h>
-
-/* current cursor location */
-unsigned int current_loc = 0;
+#include <core/video.h>
 
 char *vidptr = (char*)VIDEO_MEM_BASE_ADDR;
 
-void kprint(const char *str)
-{
-	unsigned int i = 0;
-	while (str[i] != '\0') {
-		putch(str[i++]);
-	}
-}
+struct video_driver video_drv;
 
-void kprint_newline(void)
-{
-	unsigned int line_size = BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
-	current_loc = current_loc + (line_size - current_loc % (line_size));
-}
-
-void clear_screen(void)
-{
+void clear_screen(void) {
 	unsigned int i = 0;
 	while (i < SCREENSIZE) {
 		vidptr[i++] = ' ';
 		vidptr[i++] = video_create_attribute_byte(VIDEO_COLOR_BLACK, VIDEO_COLOR_BLACK);
 	}
-	current_loc = 0;
 }
 
 char video_create_attribute_byte(enum video_colors bg, enum video_colors fg) {
 	return (bg << 4) + fg;
 }
 
-void putch(char c) {
-	vidptr[current_loc++] = c;
-	vidptr[current_loc++] = video_create_attribute_byte(VIDEO_COLOR_BLACK, VIDEO_COLOR_WHITE);
+void putchat(char c, short row, short col) {
+	int idx = BYTES_FOR_EACH_ELEMENT * ( ( COLUMNS_IN_LINE * (row - 1) ) + (col - 1) );
+	vidptr[idx] = c;
+	vidptr[idx+1] = video_create_attribute_byte(VIDEO_COLOR_BLACK, VIDEO_COLOR_LIGHT_GREY);
+}
+
+void arch_video_init() {
+	video_drv.putchat_func = putchat;
+	video_drv.clear_func = clear_screen;
+	video_drv.rows = LINES;
+	video_drv.cols = COLUMNS_IN_LINE;
+	register_video_driver(&video_drv);
 }

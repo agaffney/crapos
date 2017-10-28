@@ -1,6 +1,6 @@
 #include <arch/x86/common.h>
 #include <arch/x86/keyboard.h>
-#include <arch/x86/video.h>
+#include <core/video.h>
 
 extern unsigned char keyboard_map[128];
 extern void keyboard_handler(void);
@@ -37,13 +37,13 @@ void keyboard_handler_main(void) {
 			released = 1;
 		}
 		if(keyboard_map[keycode] == 'c') {
-			clear_screen();
+			video_clear();
 			return;
 		}
 		itoa((int)keycode, addr, 16);
 		kprint(addr);
 		kprint("  ");
-		putch(keyboard_map[keycode]);
+		video_putch(keyboard_map[keycode]);
 		if(released) {
 			kprint(" (released)");
 			released = 0;

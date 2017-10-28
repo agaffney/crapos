@@ -25,10 +25,6 @@ enum video_colors {
 	VIDEO_COLOR_WHITE
 };
 
-void kprint(const char *);
-
-void kprint_newline(void);
-
 void clear_screen(void);
 
 char video_create_attribute_byte(enum video_colors, enum video_colors);

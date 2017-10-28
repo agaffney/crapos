@@ -3,6 +3,7 @@ extern void arch_init(void);
 void kmain(void)
 {
 	arch_init();
+	video_init();
 
 	const char *str = "my first kernel with keyboard support";
 	clear_screen();

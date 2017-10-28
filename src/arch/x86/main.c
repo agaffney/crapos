@@ -7,6 +7,7 @@ struct IDT_entry IDT[IDT_SIZE];
 void arch_init(void) {
 	idt_init();
 	kb_init();
+	arch_video_init();
 }
 
 void idt_init(void)
