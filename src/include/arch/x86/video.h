@@ -25,6 +25,8 @@ enum video_colors {
 	VIDEO_COLOR_WHITE
 };
 
+void x86_video_init();
+
 void clear_screen(void);
 
 char video_create_attribute_byte(enum video_colors, enum video_colors);

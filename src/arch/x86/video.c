@@ -23,7 +23,7 @@ void putchat(char c, short row, short col) {
 	vidptr[idx+1] = video_create_attribute_byte(VIDEO_COLOR_BLACK, VIDEO_COLOR_LIGHT_GREY);
 }
 
-void arch_video_init() {
+void x86_video_init() {
 	video_drv.putchat_func = putchat;
 	video_drv.clear_func = clear_screen;
 	video_drv.rows = LINES;

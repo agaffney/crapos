@@ -1,4 +1,5 @@
 #include <arch/x86/common.h>
+#include <arch/x86/video.h>
 
 extern void kb_init(void);
 
@@ -7,7 +8,7 @@ struct IDT_entry IDT[IDT_SIZE];
 void arch_init(void) {
 	idt_init();
 	kb_init();
-	arch_video_init();
+	x86_video_init();
 }
 
 void idt_init(void)

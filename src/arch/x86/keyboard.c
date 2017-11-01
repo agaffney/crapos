@@ -2,10 +2,6 @@
 #include <arch/x86/keyboard.h>
 #include <core/keyboard.h>
 
-extern void keyboard_handler(void);
-extern char read_port(unsigned short port);
-extern void write_port(unsigned short port, unsigned char data);
-
 void kb_init(void)
 {
 	/* 0xFD is 11111101 - enables only IRQ1 (keyboard)*/

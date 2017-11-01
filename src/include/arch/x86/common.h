@@ -30,6 +30,9 @@ struct IDT_entry{
 };
 
 // Defined via ASM
+extern void load_idt(unsigned long *);
 extern void keyboard_handler(void);
-extern void load_idt(unsigned long *idt_ptr);
+extern char read_port(unsigned short port);
+extern void write_port(unsigned short port, unsigned char data);
 
+void idt_init(void);
