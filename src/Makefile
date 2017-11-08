@@ -8,7 +8,8 @@ include common.mk
 $(OUTPUT): $(SUBDIRS)
 	$(LD) $(LDFLAGS) -o $(OUTPUT) $(foreach I,$(SUBDIRS),$I/$I.o)
 	$(OBJCOPY) --only-keep-debug $(OUTPUT) $(OUTPUT).sym
-	$(STRIP) $(OUTPUT)
+	# Disable stripping for easier debugging later
+	#$(STRIP) $(OUTPUT)
 
 .PHONY: run run-debug
 

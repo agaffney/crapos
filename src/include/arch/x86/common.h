@@ -1,3 +1,6 @@
+#ifndef _X86_COMMON_H
+#define _X86_COMMON_H
+
 /*     Ports
 *	 PIC1	PIC2
 *Command 0x20	0xA0
@@ -36,3 +39,5 @@ extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
 
 void idt_init(void);
+
+#endif

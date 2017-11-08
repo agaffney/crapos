@@ -1,5 +1,6 @@
 #include <arch/x86/common.h>
 #include <arch/x86/keyboard.h>
+#include <arch/x86/keyboard_map.h>
 #include <core/keyboard.h>
 
 void kb_init(void)
@@ -8,7 +9,7 @@ void kb_init(void)
 	write_port(PIC1_DATA_ADDR, 0xFD);
 }
 
-void keyboard_handler_main(void) {
+void x86_keyboard_handler(void) {
 	unsigned char status;
 	unsigned char keycode;
 	unsigned int key;

@@ -1,7 +1,6 @@
 #include <arch/x86/common.h>
 #include <arch/x86/video.h>
-
-extern void kb_init(void);
+#include <arch/x86/keyboard.h>
 
 struct IDT_entry IDT[IDT_SIZE];
 
