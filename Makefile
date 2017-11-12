@@ -3,4 +3,4 @@
 default: all
 
 %:
-	$(MAKE) -C src $@
+	$(MAKE) -C kernel $@
