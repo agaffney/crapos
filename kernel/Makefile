@@ -16,7 +16,7 @@ all: $(OUTPUT)
 KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
 
 $(OUTPUT): $(KERNEL_OBJS)
-	$(LD) $(LDFLAGS) $(ARCH_LDFLAGS) -T $(ARCHDIR)/$(LINKER_SCRIPT) -o $@ $(KERNEL_OBJS)
+	$(LD) $(LDFLAGS) $(ARCH_LDFLAGS) -o $@ $(KERNEL_OBJS)
 	$(OBJCOPY) --only-keep-debug $@ $(@).sym
 	# Disable stripping for easier debugging later
 	#$(STRIP) $(OUTPUT)
