@@ -1,15 +1,31 @@
+include ../common.mk
+
+ARCHDIR = arch/$(ARCH)
+
+include $(ARCHDIR)/config.mk
+
 OUTPUT=kernel
-SUBDIRS=arch core
-LD_EXTRA_FLAGS = -T link.ld
-CLEAN_EXTRA = $(OUTPUT).sym
+SUBDIRS=core $(ARCHDIR)
 
-include common.mk
+CFLAGS=-ggdb -O0 -fno-stack-protector -nostdinc -Wall -fno-builtin -I ./include $(ARCH_CFLAGS)
 
-$(OUTPUT): $(SUBDIRS)
-	$(LD) $(LDFLAGS) -o $(OUTPUT) $(foreach I,$(SUBDIRS),$I/$I.o)
-	$(OBJCOPY) --only-keep-debug $(OUTPUT) $(OUTPUT).sym
+KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
+
+$(OUTPUT): $(KERNEL_OBJS)
+	$(LD) $(LDFLAGS) $(ARCH_LDFLAGS) -T $(ARCHDIR)/$(LINKER_SCRIPT) -o $@ $(KERNEL_OBJS)
+	$(OBJCOPY) --only-keep-debug $@ $(@).sym
 	# Disable stripping for easier debugging later
 	#$(STRIP) $(OUTPUT)
+
+clean:
+	find . -name '*.o' -delete
+	rm -f $(OUTPUT) $(OUTPUT).sym
+
+%.c.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+%.asm.o: %.asm
+	$(NASM) $(NASM_FLAGS) $(ARCH_NASM_FLAGS) $< -o $@
 
 .PHONY: run run-debug
 

@@ -1,3 +1,3 @@
 *.o
-kernel
-kernel.sym
+kernel/kernel
+kernel/kernel.sym
