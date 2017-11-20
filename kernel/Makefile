@@ -28,6 +28,7 @@ clean:
 %.c.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
+# Empty rule needed to override implicit "%: %.o" rule
 %.asm:
 %.asm.o: %.asm
 	$(NASM) $(NASM_FLAGS) $(ARCH_NASM_FLAGS) $< -o $@
