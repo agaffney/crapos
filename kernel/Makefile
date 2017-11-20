@@ -9,6 +9,10 @@ SUBDIRS=core $(ARCHDIR)
 
 CFLAGS=-ggdb -O0 -fno-stack-protector -nostdinc -Wall -fno-builtin -I ./include $(ARCH_CFLAGS)
 
+# Default target
+.PHONY: all
+all: $(OUTPUT)
+
 KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
 
 $(OUTPUT): $(KERNEL_OBJS)
