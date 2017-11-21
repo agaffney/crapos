@@ -16,3 +16,4 @@ http://wiki.osdev.org/Tutorials
 * basic keyboard handling via BIOS
 * basic VGA text-mode output
 * combined libc/libk
+* mostly sane and maintanable build system
