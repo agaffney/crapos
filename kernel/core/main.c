@@ -1,6 +1,7 @@
 #include <core/keyboard.h>
 #include <core/video.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 extern void arch_init(void);
 
@@ -25,6 +26,7 @@ void kmain(void)
 void test_keyboard_event_handler(int key, int state) {
 	char buf[20];
 
+/*
 	itoa((int)key, buf, 16);
 	kprint(buf);
 	kprint("  ");
@@ -33,6 +35,9 @@ void test_keyboard_event_handler(int key, int state) {
 	itoa(key, buf, 16);
 	kprint(buf);
 	kprint(")");
+*/
+	sprintf(buf, "0x%x %c (0x%x)", key, (char)key, key);
+	kprint(buf);
 	if(state == KEYBOARD_KEY_STATE_UP) {
 		kprint(" (released)");
 	}

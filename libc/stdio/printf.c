@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-int sprintf(char *str, const char* restrict format, ...) {
+int sprintf(char *out, const char* restrict format, ...) {
 	va_list parameters;
 	va_start(parameters, format);
 
-	int ret = vsprintf(str, format, parameters);
+	int ret = vsprintf(out, format, parameters);
 
 	va_end(parameters);
 	return ret;
@@ -53,6 +53,7 @@ int vsprintf(char *out, const char* restrict format, va_list parameters) {
 			}
 		} else {
 			out[written] = format[0];
+			format++;
 			written++;
 		}
 	}
