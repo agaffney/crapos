@@ -11,7 +11,6 @@ KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
 LIBK_OBJ = $(BASEDIR)/libc/libk.a
 
 $(OUTPUT): $(KERNEL_OBJS) $(LIBK_OBJ)
-	echo $(KERNEL_OBJS)
 	$(LD) $(LDFLAGS) $(KERNEL_ARCH_LDFLAGS) -o $@ $(KERNEL_OBJS) $(LIBK_OBJ)
 	$(OBJCOPY) --only-keep-debug $@ $(@).sym
 	# Disable stripping for easier debugging later

@@ -25,18 +25,6 @@ void itoa(int input, char *output, int base) {
 			buf[idx++] = '0';
 		}
 	}
-	// Add '0' prefix to octal number
-	if(base == 8) {
-		buf[idx++] = '0';
-	}
-	// Add '0x' prefix to hex number
-	if(base == 16) {
-		if(idx % 2 != 0) {
-			buf[idx++] = '0';
-		}
-		buf[idx++] = 'x';
-		buf[idx++] = '0';
-	}
 	if(is_negative) {
 		buf[idx++] = '-';
 	}
