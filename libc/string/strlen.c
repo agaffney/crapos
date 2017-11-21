@@ -1,9 +1,9 @@
-unsigned int strlen(const char *str) {
-	unsigned int idx;
-	for(idx = 0; idx < 32768; idx++) {
-		if(str[idx] == 0) {
-			return idx;
-		}
+#include <string.h>
+
+size_t strlen(const char *str) {
+	size_t len;
+	while(str[len]) {
+		len++;
 	}
-	return -1;
+	return len;
 }

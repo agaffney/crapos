@@ -1,6 +1,6 @@
 #include <core/keyboard.h>
 #include <core/video.h>
-#include <string/itoa.h>
+#include <stdlib.h>
 
 extern void arch_init(void);
 
