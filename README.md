@@ -9,3 +9,10 @@ https://github.com/arjun024/mkeykernel
 but is also heavily influenced by the tutorials at:
 
 http://wiki.osdev.org/Tutorials
+
+## Features
+
+* It boots!
+* basic keyboard handling via BIOS
+* basic VGA text-mode output
+* combined libc/libk
