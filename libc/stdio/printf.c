@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,14 +40,14 @@ int vsprintf(char *out, const char* restrict format, va_list parameters) {
 				}
 				format++;
 				written += len;
-			} else if (format[0] == 'x') {
+			} else if (format[0] == 'x' || format[0] == 'X') {
 				unsigned int val = va_arg(parameters, unsigned int);
 				char buf[50];
 				itoa(val, buf, 16);
 				size_t len = strlen(buf);
 				int i;
 				for (i = 0; i < len; i++) {
-					out[written + i] = buf[i];
+					out[written + i] = ( format[0] == 'x' ? tolower(buf[i]) : toupper(buf[i]) );
 				}
 				format++;
 				written += len;
