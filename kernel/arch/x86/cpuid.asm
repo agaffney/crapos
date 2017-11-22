@@ -2,7 +2,9 @@ bits 32
 
 global cpuid_vendor_string
 
+; void cpuid_vendor_string(char *)
 cpuid_vendor_string:
+	; Set EAX to 0 for CPU vendor string
 	mov eax, 0x0
 	cpuid
 	; Put start address of 'char *' param into EAX
