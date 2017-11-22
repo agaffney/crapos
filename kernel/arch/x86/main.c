@@ -2,6 +2,7 @@
 #include <arch/x86/video.h>
 #include <arch/x86/keyboard.h>
 #include <arch/x86/serial.h>
+#include <arch/x86/cpuid.h>
 
 struct IDT_entry IDT[IDT_SIZE];
 
@@ -10,6 +11,11 @@ void arch_init(void) {
 	kb_init();
 	x86_video_init();
 	init_serial();
+	char buf[20];
+	cpuid_vendor_string(buf);
+	kprint("CPU vendor: ");
+	kprint(buf);
+	kprint_newline();
 }
 
 void idt_init(void)
