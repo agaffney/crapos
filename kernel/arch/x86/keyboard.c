@@ -6,7 +6,7 @@
 void kb_init(void)
 {
 	/* 0xFD is 11111101 - enables only IRQ1 (keyboard)*/
-	write_port(PIC1_DATA_ADDR, 0xFD);
+	outb(PIC1_DATA_ADDR, 0xFD);
 }
 
 void x86_keyboard_handler(void) {
@@ -17,15 +17,15 @@ void x86_keyboard_handler(void) {
 	int modifier = 0;
 
 	/* write EOI */
-	write_port(PIC1_COMMAND_ADDR, PIC_EOI_ACK);
+	outb(PIC1_COMMAND_ADDR, PIC_EOI_ACK);
 
 	while(1) {
-		status = read_port(KEYBOARD_STATUS_PORT);
+		status = inb(KEYBOARD_STATUS_PORT);
 		/* Lowest bit of status will be set if buffer is not empty */
 		if (!(status & 0x01)) {
 			break;
 		}
-		keycode = read_port(KEYBOARD_DATA_PORT);
+		keycode = inb(KEYBOARD_DATA_PORT);
 		if(keycode == KEYBOARD_SET1_EXTENDED_PREFIX) {
 			modifier = KEYBOARD_SET1_EXTENDED_PREFIX;
 			continue;

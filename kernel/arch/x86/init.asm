@@ -17,18 +17,18 @@ start:
 	call kmain
 	hlt		 	;halt the CPU
 
-global read_port
+global inb
 
-read_port:
+inb:
 	mov edx, [esp + 4]
 	; the AL register is the lower bits of the EAX register, which gcc will
 	; automatically look at for an integer return value (per C calling conventions)
 	in al, dx
 	ret
 
-global write_port
+global outb
 
-write_port:
+outb:
 	mov   edx, [esp + 4]
 	mov   al, [esp + 4 + 4]
 	out   dx, al

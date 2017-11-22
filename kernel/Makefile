@@ -10,6 +10,9 @@ all: $(OUTPUT)
 KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
 LIBK_OBJ = $(BASEDIR)/libc/libk.a
 
+QEMU_COMMON_OPTS = -nographic -kernel $(OUTPUT)
+QEMU_DEBUG_OPTS = -s -S
+
 $(OUTPUT): $(KERNEL_OBJS) $(LIBK_OBJ)
 	$(LD) $(LDFLAGS) $(KERNEL_ARCH_LDFLAGS) -o $@ $(KERNEL_OBJS) $(LIBK_OBJ)
 	$(OBJCOPY) --only-keep-debug $@ $(@).sym
@@ -34,8 +37,10 @@ $(LIBK_OBJ):
 .PHONY: run run-debug
 
 run: $(OUTPUT)
-	qemu-system-i386 -kernel $(OUTPUT)
+	# Ctrl-a x to exit, Ctrl-a h for help
+	$(QEMU_SYSTEM) $(QEMU_COMMON_OPTS)
 
 run-debug: $(OUTPUT)
-	qemu-system-i386 -monitor stdio -s -S -kernel $(OUTPUT)
+	# Ctrl-a x to exit, Ctrl-a h for help
+	$(QEMU_SYSTEM) $(QEMU_COMMON_OPTS) $(QEMU_DEBUG_OPTS)
 

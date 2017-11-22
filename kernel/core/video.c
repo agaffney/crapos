@@ -1,4 +1,5 @@
 #include <core/video.h>
+#include <arch/x86/serial.h>
 
 struct video_driver *VIDEO_DRIVER;
 
@@ -37,11 +38,14 @@ void video_clear() {
 void kprint(const char *str) {
 	unsigned int i = 0;
 	while (str[i] != '\0') {
-		video_putch(str[i++]);
+		video_putch(str[i]);
+		write_serial(str[i]);
+		i++;
 	}
 }
 
 void kprint_newline(void) {
 	video_set_pos(video_current_row + 1, 1);
+	write_serial('\n');
 }
 

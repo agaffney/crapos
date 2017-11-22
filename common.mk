@@ -12,6 +12,7 @@ LD ?= ld
 NASM ?= nasm
 OBJCOPY ?= objcopy
 STRIP ?= strip
+QEMU_SYSTEM ?= qemu-system-i386
 
 ARCH ?= x86
 CFLAGS ?= -ggdb -O0 -Wall
