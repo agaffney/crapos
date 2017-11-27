@@ -29,6 +29,9 @@ $(LIBK_OBJ):
 %.c.o: %.c
 	$(CC) -c -o $@ $< $(KERNEL_CFLAGS)
 
+%.s.o: %.s
+	$(CC) -c -o $@ $< $(KERNEL_CFLAGS)
+
 # Empty rule needed to override implicit "%: %.o" rule
 %.asm:
 %.asm.o: %.asm
