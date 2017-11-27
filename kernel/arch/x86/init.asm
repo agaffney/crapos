@@ -1,23 +1,6 @@
 ;nasm directive - 32 bit
 bits 32
 
-global inb
-
-inb:
-	mov edx, [esp + 4]
-	; the AL register is the lower bits of the EAX register, which gcc will
-	; automatically look at for an integer return value (per C calling conventions)
-	in al, dx
-	ret
-
-global outb
-
-outb:
-	mov   edx, [esp + 4]
-	mov   al, [esp + 4 + 4]
-	out   dx, al
-	ret
-
 global load_idt
 
 load_idt:
