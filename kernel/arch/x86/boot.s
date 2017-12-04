@@ -26,8 +26,10 @@ stack_top:
 # modules there. This lets the bootloader know it must avoid the addresses.
 .section .bss, "aw", @nobits
 	.align 4096
+.global boot_pagedir
 boot_pagedir:
 	.skip 4096
+.global boot_pagetab1
 boot_pagetab1:
 	.skip 4096
 # Further page tables may be required if the kernel grows beyond 3 MiB.

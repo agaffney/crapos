@@ -4,10 +4,12 @@
 #include <arch/x86/keyboard.h>
 #include <arch/x86/serial.h>
 #include <arch/x86/cpuid.h>
+#include <arch/x86/vmm.h>
 
 struct IDT_entry IDT[IDT_SIZE];
 
 void arch_init(void) {
+	vmm_init();
 	idt_init();
 	kb_init();
 	x86_video_init();
