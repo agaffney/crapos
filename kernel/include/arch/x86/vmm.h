@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 // This should match the value with the same name defined in boot.s

@@ -1,5 +1,4 @@
-#ifndef _X86_COMMON_H
-#define _X86_COMMON_H
+#pragma once
 
 /*     Ports
 *	 PIC1	PIC2
@@ -37,5 +36,3 @@ extern void load_idt(unsigned long *);
 extern void keyboard_handler(void);
 
 void idt_init(void);
-
-#endif

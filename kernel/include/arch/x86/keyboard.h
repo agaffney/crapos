@@ -1,5 +1,4 @@
-#ifndef _KEYBOARD_H
-#define _KEYBOARD_H
+#pragma once
 
 #include <arch/x86/common.h>
 
@@ -11,5 +10,3 @@
 
 void x86_keyboard_handler(void);
 void kb_init(void);
-
-#endif

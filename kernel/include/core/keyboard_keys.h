@@ -1,5 +1,4 @@
-#ifndef HAVE_KEYBOARD_KEYS_H
-#define HAVE_KEYBOARD_KEYS_H
+#pragma once
 
 enum keyboard_key_state {
 	KEYBOARD_KEY_STATE_UP,
@@ -45,5 +44,3 @@ enum keyboard_keys {
 	KEYBOARD_KEY_LEFT_ARROW,
 	KEYBOARD_KEY_RIGHT_ARROW,
 };
-
-#endif // #ifndef HAVE_KEYBOARD_KEYS_H
