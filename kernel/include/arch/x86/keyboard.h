@@ -1,7 +1,5 @@
 #pragma once
 
-#include <arch/x86/common.h>
-
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_STATUS_PORT 0x64
 

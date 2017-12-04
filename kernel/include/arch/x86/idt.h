@@ -17,11 +17,10 @@
 // Used to signal to PIC that the interrupt is being handled
 #define PIC_EOI_ACK 0x20
 
-#define IDT_SIZE 256
-#define IDT_TYPE_INTERRUPT_GATE 0x8e
 #define KERNEL_CODE_SEGMENT_OFFSET 0x08
 
-#define ENTER_KEY_CODE 0x1C
+#define IDT_SIZE 256
+#define IDT_TYPE_INTERRUPT_GATE 0x8e
 
 struct IDT_entry{
 	unsigned short int offset_lowerbits;
@@ -33,6 +32,7 @@ struct IDT_entry{
 
 // Defined via ASM
 extern void load_idt(unsigned long *);
+
 extern void keyboard_handler(void);
 
 void idt_init(void);

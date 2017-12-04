@@ -1,4 +1,4 @@
-#include <arch/x86/common.h>
+#include <arch/x86/idt.h>
 #include <arch/x86/io.h>
 #include <arch/x86/keyboard.h>
 #include <arch/x86/keyboard_map.h>
