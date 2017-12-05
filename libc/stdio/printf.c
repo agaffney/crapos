@@ -16,11 +16,10 @@ int sprintf(char *out, const char* restrict format, ...) {
 
 int vsprintf(char *out, const char* restrict format, va_list parameters) {
 	int written = 0;
-//	size_t max_remain;
+	char itoa_buf[50];
+	int i;
 
 	while (*format != '\0') {
-//		max_remain = INT_MAX - written;
-
 		if (format[0] == '%') {
 			format++;
 			if (format[0] == '%') {
@@ -40,14 +39,30 @@ int vsprintf(char *out, const char* restrict format, va_list parameters) {
 				}
 				format++;
 				written += len;
+			} else if (format[0] == 'd' || format[0] == 'i') {
+				signed int val  = va_arg(parameters, signed int);
+				itoa(val, itoa_buf, 10);
+				size_t len = strlen(itoa_buf);
+				for (i = 0; i < len; i++) {
+					out[written + i] = itoa_buf[i];
+				}
+				format++;
+				written += len;
+			} else if (format[0] == 'u') {
+				unsigned int val  = va_arg(parameters, unsigned int);
+				itoa(val, itoa_buf, 10);
+				size_t len = strlen(itoa_buf);
+				for (i = 0; i < len; i++) {
+					out[written + i] = itoa_buf[i];
+				}
+				format++;
+				written += len;
 			} else if (format[0] == 'x' || format[0] == 'X') {
 				unsigned int val = va_arg(parameters, unsigned int);
-				char buf[50];
-				itoa(val, buf, 16);
-				size_t len = strlen(buf);
-				int i;
+				itoa(val, itoa_buf, 16);
+				size_t len = strlen(itoa_buf);
 				for (i = 0; i < len; i++) {
-					out[written + i] = ( format[0] == 'x' ? tolower(buf[i]) : toupper(buf[i]) );
+					out[written + i] = ( format[0] == 'x' ? tolower(itoa_buf[i]) : toupper(itoa_buf[i]) );
 				}
 				format++;
 				written += len;
