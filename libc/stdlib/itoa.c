@@ -19,6 +19,10 @@ void itoa(int input, char *output, int base) {
 		buf[idx++] = remainder > 9 ? (remainder - 10 + 'a') : (remainder + '0');
 		num /= base;
 	}
+	// Make sure we output 0 in the case of 0 as input
+	if (input == 0) {
+		buf[idx++] = '0';
+	}
 	// Pad out a binary number to 8 bytes
 	if(base == 2) {
 		for(i = (idx - 2) % 8; i > 0; i--) {
