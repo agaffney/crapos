@@ -10,7 +10,7 @@ all: $(OUTPUT)
 KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
 LIBK_OBJ = $(BASEDIR)/libc/libk.a
 
-QEMU_COMMON_OPTS = -nographic -kernel $(OUTPUT)
+QEMU_COMMON_OPTS = -nographic -kernel $(OUTPUT) -no-reboot #-d int,cpu_reset
 QEMU_DEBUG_OPTS = -s -S
 
 $(OUTPUT): $(KERNEL_OBJS) $(LIBK_OBJ)
