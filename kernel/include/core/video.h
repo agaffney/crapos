@@ -11,5 +11,3 @@ void video_clear();
 void video_set_pos(short, short);
 void video_putch(char);
 
-void kprint(const char *);
-void kprint_newline();
