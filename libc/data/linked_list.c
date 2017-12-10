@@ -18,10 +18,8 @@ void Linked_List_push(Linked_List * list, void * item) {
 	kprint("list->length = %d, list->first = 0x%x\n", list->length, list->first);
 	if (list->length == 0 && list->first != NULL) {
 		new_item = list->first;
-		kprint("using pre-existing empty item\n");
-//	} else {
-//		new_item = kmalloc(sizeof(Linked_List_Item));
-//		kprint("using kmalloc'd item\n");
+	} else {
+		new_item = kmalloc(sizeof(Linked_List_Item));
 	}
 	kprint("new_item = 0x%x, list->last = 0x%x, list->length = %d\n", new_item, list->last, list->length);
 	new_item->item = item;

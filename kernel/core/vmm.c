@@ -4,7 +4,6 @@
 #include <data/linked_list.h>
 
 void * KMALLOC_NEXT_ADDR;
-vmm_page * KMALLOC_CUR_PAGE;
 
 // Pre-allocate initial list and first item to bootstrap us before we have any
 // free memory pages available
@@ -18,7 +17,8 @@ Linked_List VMM_FREE_PAGES = {
 // TODO: implement an actual allocator that can detect page boundaries
 void * kmalloc(size_t len) {
 	if (KMALLOC_NEXT_ADDR == NULL) {
-		KMALLOC_NEXT_ADDR = Linked_List_get(&VMM_FREE_PAGES, 0);
+		vmm_page * first_page = Linked_List_get(&VMM_FREE_PAGES, 0);
+		KMALLOC_NEXT_ADDR = first_page->virt_addr;
 	}
 	void * addr = KMALLOC_NEXT_ADDR;
 	KMALLOC_NEXT_ADDR += len;

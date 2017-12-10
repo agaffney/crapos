@@ -26,6 +26,7 @@ void vmm_init() {
 	NEXT_PHYS_PAGE = &_bootstrap_heap_start - KERN_OFFSET;
 	kprint("NEXT_PHYS_PAGE = 0x%x\n", NEXT_PHYS_PAGE);
 	// Seed the heap allocator with the first available physical page
+	initial_page.virt_addr = &_bootstrap_heap_start;
 	initial_page.phys_addr = get_next_phys_page();
 	kprint("initial_page.phys_addr = 0x%x, &initial_page = 0x%x\n", initial_page.phys_addr, &initial_page);
 	vmm_add_free_page(&initial_page);
@@ -34,11 +35,9 @@ void vmm_init() {
 	uint8_t bootstrap_pages_count = (&_bootstrap_heap_end - &_bootstrap_heap_start) / ARCH_PAGE_SIZE;
 	vmm_page * tmp_page;
 	for (i = 1; i < bootstrap_pages_count; i++) {
-/*
 		tmp_page = kmalloc(sizeof(vmm_page));
 		tmp_page->phys_addr = get_next_phys_page();
 		vmm_add_free_page(tmp_page);
-*/
 		kprint("adding bootstrap page %d\n", i);
 	}
 
