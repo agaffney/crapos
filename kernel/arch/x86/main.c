@@ -5,6 +5,7 @@
 #include <arch/x86/cpuid.h>
 #include <arch/x86/idt.h>
 #include <arch/x86/vmm.h>
+#include <core/kprint.h>
 
 void arch_init(void) {
 	x86_video_init();
@@ -14,8 +15,6 @@ void arch_init(void) {
 	kb_init();
 	char buf[20];
 	cpuid_vendor_string(buf);
-	kprint("CPU vendor: ");
-	kprint(buf);
-	kprint_newline();
+	kprint("CPU vendor: %s\n", buf);
 }
 
