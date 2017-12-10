@@ -26,6 +26,7 @@ SECTIONS
 		*(COMMON)
 		*(.bss)
 		*(.bootstrap_stack)
+		*(.bootstrap_heap)
 	}
 	/* Add a symbol that indicates the end address of the kernel. */
 	_kernel_end = .;

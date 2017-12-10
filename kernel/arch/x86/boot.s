@@ -12,25 +12,33 @@
 .long MB_FLAGS
 .long MB_CHECKSUM
 
-# Kernel is mapped at 3GB
+# Kernel is mapped at 3GB + 1MB
 .set KERN_OFFSET, 0xC0000000
 
 # Allocate the initial stack.
 .section .bootstrap_stack, "aw", @nobits
-stack_bottom:
+bootstrap_stack_bottom:
 .skip 16384 # 16 KiB
-stack_top:
+bootstrap_stack_top:
+
+# Allocate the initial heap
+.section .bootstrap_heap, "aw", @nobits
+.global _bootstrap_heap_start
+_bootstrap_heap_start:
+.skip 16384 # 16 KiB
+.global _bootstrap_heap_end
+_bootstrap_heap_end:
 
 # Preallocate pages used for paging. Don't hard-code addresses and assume they
 # are available, as the bootloader might have loaded its multiboot structures or
 # modules there. This lets the bootloader know it must avoid the addresses.
 .section .bss, "aw", @nobits
 	.align 4096
-.global boot_pagedir
-boot_pagedir:
+.global _boot_pagedir
+_boot_pagedir:
 	.skip 4096
-.global boot_pagetab1
-boot_pagetab1:
+.global _boot_pagetab1
+_boot_pagetab1:
 	.skip 4096
 # Further page tables may be required if the kernel grows beyond 3 MiB.
 
@@ -41,7 +49,7 @@ boot_pagetab1:
 _start:
 	# Stick the physical address of the first page table in the destination
 	# index register
-	movl $(boot_pagetab1 - KERN_OFFSET), %edi
+	movl $(_boot_pagetab1 - KERN_OFFSET), %edi
 	# We're mapping the first 1024 pages (4MB)
 	# This covers the first 1MB, which is normally reserved for x86-ey things,
 	# plus another 3MB for the kernel
@@ -70,11 +78,11 @@ _start:
 	# would instead page fault if there was no identity mapping.
 
 	# Map the page table to both virtual addresses 0x00000000 and 0xC0000000
-	movl $(boot_pagetab1 - KERN_OFFSET + 0x003), boot_pagedir - KERN_OFFSET + 0
-	movl $(boot_pagetab1 - KERN_OFFSET + 0x003), boot_pagedir - KERN_OFFSET + 768 * 4
+	movl $(_boot_pagetab1 - KERN_OFFSET + 0x003), _boot_pagedir - KERN_OFFSET + 0
+	movl $(_boot_pagetab1 - KERN_OFFSET + 0x003), _boot_pagedir - KERN_OFFSET + 768 * 4
 
-	# Set cr3 to the address of the boot_pagedir.
-	movl $(boot_pagedir - KERN_OFFSET), %ecx
+	# Set cr3 to the address of _boot_pagedir
+	movl $(_boot_pagedir - KERN_OFFSET), %ecx
 	movl %ecx, %cr3
 
 	# Enable paging and the write-protect bit.
@@ -90,14 +98,14 @@ _start_higher_half:
 	# At this point, paging is fully set up and enabled.
 
 	# Unmap the identity mapping as it is now unnecessary.
-	#movl $0, boot_pagedir + 0
+	#movl $0, _boot_pagedir + 0
 
 	# Reload crc3 to force a TLB flush so the changes to take effect.
 	movl %cr3, %ecx
 	movl %ecx, %cr3
 
 	# Set up the stack.
-	mov $stack_top, %esp
+	mov $bootstrap_stack_top, %esp
 
 	# Enter the high-level kernel.
 	call kmain
