@@ -24,11 +24,11 @@ void vmm_init() {
 	// Set the next available physical page to the location of our
 	// bootstrap heap
 	NEXT_PHYS_PAGE = &_bootstrap_heap_start - KERN_OFFSET;
-	kprint("NEXT_PHYS_PAGE = 0x%x\n", NEXT_PHYS_PAGE);
+	kdebug("NEXT_PHYS_PAGE = 0x%x\n", NEXT_PHYS_PAGE);
 	// Seed the heap allocator with the first available physical page
 	initial_page.virt_addr = &_bootstrap_heap_start;
 	initial_page.phys_addr = get_next_phys_page();
-	kprint("initial_page.phys_addr = 0x%x, &initial_page = 0x%x\n", initial_page.phys_addr, &initial_page);
+	kdebug("initial_page.phys_addr = 0x%x, &initial_page = 0x%x\n", initial_page.phys_addr, &initial_page);
 	vmm_add_free_page(&initial_page);
 	// Now that we have a page available, we can allocate memory for the rest
 	// of the pages in our bootstrap heap
@@ -44,6 +44,7 @@ void vmm_init() {
 }
 
 void reload_page_dir() {
+	// Put the physical address of the page directory into the CR3 register
 	uint32_t val = (uint32_t)PAGE_DIR - KERN_OFFSET;
 	asm volatile ("movl %0, %%cr3" :: "r"(val));
 }
@@ -54,13 +55,11 @@ void * get_next_phys_page() {
 	return new_page;
 }
 
-void * map_page() {
-	void * new_page = get_next_phys_page();
-	uint16_t page_dir_idx = get_page_dir_index(new_page);
-	uint16_t page_tbl_idx = get_page_table_index(new_page);
-	kprint("0x%x, 0x%x\n", page_dir_idx, page_tbl_idx);
+void arch_vmm_map_page(vmm_page * page) {
+	uint16_t page_dir_idx = get_page_dir_index(page->virt_addr);
+	uint16_t page_tbl_idx = get_page_table_index(page->virt_addr);
+	kprint("page_dir_idx = 0x%x, page_tbl_idx = 0x%x\n", page_dir_idx, page_tbl_idx);
 
-	return new_page;
 }
 
 uint16_t get_page_dir_index(void * addr) {
