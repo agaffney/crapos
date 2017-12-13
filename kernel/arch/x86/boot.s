@@ -50,13 +50,17 @@ _start:
 	# Stick the physical address of the first page table in the destination
 	# index register
 	movl $(_boot_pagetab1 - KERN_OFFSET), %edi
-	# We're mapping the first 1024 pages (4MB)
+	# We're mapping up to the first 1024 pages (4MB)
 	# This covers the first 1MB, which is normally reserved for x86-ey things,
-	# plus another 3MB for the kernel
+	# plus up to another 3MB for the kernel
 	movl $0, %esi
 	movl $1024, %ecx
 
 1:
+	# Break out of loop once we reach the end of current kernel memory
+	cmpl $(_kernel_end - 0xC0000000), %esi
+	jge 2f
+
 	# Copy current page start address into EDX
 	movl %esi, %edx
 	# Set bits for present/writable
@@ -70,6 +74,7 @@ _start:
 	# Loop to the next entry if we haven't finished.
 	loop 1b
 
+2:
 	# The page table is used at both page directory entry 0 (virtually from 0x0
 	# to 0x3FFFFF) (thus identity mapping the kernel) and page directory entry
 	# 768 (virtually from 0xC0000000 to 0xC03FFFFF) (thus mapping it in the

@@ -46,3 +46,4 @@ void * map_page();
 void * get_next_phys_page();
 uint16_t get_page_dir_index(void * addr);
 uint16_t get_page_table_index(void * addr);
+x86_page_table * get_page_table(uint16_t page_dir_idx);
