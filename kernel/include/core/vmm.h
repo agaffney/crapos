@@ -7,11 +7,12 @@
 #define VMM_MIN_FREE_PAGES 2
 
 #define KMALLOC_ATOMIC 1
+#define KMALLOC_ZERO   2
 
 typedef struct {
 	void * virt_addr;
 	void * phys_addr;
-	uint16_t remain;
+	int16_t remain;
 } vmm_page;
 
 void vmm_add_free_page(vmm_page * page);

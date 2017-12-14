@@ -15,7 +15,6 @@ Linked_List VMM_FREE_PAGES = {
 	.length = 0,
 };
 
-// TODO: implement an actual allocator that can detect page boundaries
 void * kmalloc(size_t len, uint8_t flags) {
 	if (KMALLOC_CUR_PAGE == NULL) {
 		KMALLOC_CUR_PAGE = Linked_List_shift(&VMM_FREE_PAGES);
@@ -34,9 +33,10 @@ void * kmalloc(size_t len, uint8_t flags) {
 			vmm_page * new_page;
 			// Add 4 more free pages
 			for (i = 0; i < 4; i++) {
-				new_page = kmalloc(sizeof(vmm_page), 0);
+				new_page = kmalloc(sizeof(vmm_page), KMALLOC_ZERO & KMALLOC_ATOMIC);
 				new_page->phys_addr = arch_vmm_next_phys_page();
 				new_page->virt_addr = NULL;
+				new_page->remain = PAGE_SIZE;
 				Linked_List_push(&VMM_FREE_PAGES, new_page);
 			}
 		}
@@ -45,6 +45,12 @@ void * kmalloc(size_t len, uint8_t flags) {
 	KMALLOC_NEXT_ADDR += len;
 	KMALLOC_CUR_PAGE->remain -= len;
 	kdebug("len=%d, addr=0x%x, next_addr=0x%x, remain=%d\n", len, addr, KMALLOC_NEXT_ADDR, KMALLOC_CUR_PAGE->remain);
+	if (flags & KMALLOC_ZERO) {
+		int i;
+		for (i = 0; i < len; i++) {
+			*(char *)((size_t)addr + i) = '\0';
+		}
+	}
 	return addr;
 }
 

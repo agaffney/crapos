@@ -9,6 +9,8 @@
 // This should match the size of the .bootstrap_heap section in boot.s
 #define INITIAL_HEAP_SIZE 16384
 
+#define MIN_SPARE_PAGE_TABLES 2
+
 #define PAGE_DIR_ENTRIES 1024
 #define PAGE_DIR_ENTRY_SIZE 4
 #define PAGE_TABLE_ENTRIES 1024
@@ -33,11 +35,11 @@ extern char _bootstrap_heap_start;
 extern char _bootstrap_heap_end;
 
 typedef struct {
-	void * pages[1024];
+	uint32_t pages[1024];
 } x86_page_table;
 
 typedef struct {
-	x86_page_table * page_tables[1024];
+	uint32_t page_tables[1024];
 } x86_page_dir;
 
 void vmm_init();

@@ -3,6 +3,13 @@
 #include <core/vmm.h>
 #include <data/linked_list.h>
 
+Linked_List * Linked_List_init(Linked_List * list) {
+	list->first = NULL;
+	list->last = NULL;
+	list->length = 0;
+	return list;
+}
+
 void * Linked_List_get(Linked_List * list, uint32_t index) {
 	uint32_t count;
 	Linked_List_Item * item = list->first;
@@ -19,7 +26,7 @@ void Linked_List_push(Linked_List * list, void * data) {
 	if (list->length == 0 && list->first != NULL) {
 		new_item = list->first;
 	} else {
-		new_item = kmalloc(sizeof(Linked_List_Item), 0);
+		new_item = kmalloc(sizeof(Linked_List_Item), KMALLOC_ZERO);
 	}
 	new_item->data = data;
 	if (list->first == NULL) {

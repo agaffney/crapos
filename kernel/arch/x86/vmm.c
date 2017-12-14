@@ -1,6 +1,7 @@
 #include <arch/x86/vmm.h>
 #include <core/kprint.h>
 #include <core/vmm.h>
+#include <data/linked_list.h>
 
 x86_page_dir * PAGE_DIR;
 char * NEXT_PHYS_PAGE;
@@ -9,16 +10,18 @@ char * NEXT_PHYS_PAGE;
 // allocator
 vmm_page initial_pages[4];
 
+Linked_List * FREE_PAGE_TABLES;
+
 void vmm_init() {
 	int i;
 	// Reuse initial page directory from boot.s to conserve memory
 	PAGE_DIR = (x86_page_dir *)&_boot_pagedir;
 	// Mark all entries in page directory as writable but not-present
 	for (i = 0; i < PAGE_DIR_ENTRIES; i++) {
-		PAGE_DIR->page_tables[i] = (x86_page_table *)(0 | PAGE_FLAG_WRITABLE);
+		PAGE_DIR->page_tables[i] = (0 | PAGE_FLAG_WRITABLE);
 	}
 	// Map first 4MB of memory at 0 and 3GB
-	PAGE_DIR->page_tables[0] = (x86_page_table *)(((uint32_t)&_boot_pagetab1 - KERN_OFFSET) | (PAGE_FLAG_PRESENT + PAGE_FLAG_WRITABLE));
+	PAGE_DIR->page_tables[0] = ((uint32_t)&_boot_pagetab1 - KERN_OFFSET) | (PAGE_FLAG_PRESENT + PAGE_FLAG_WRITABLE);
 	PAGE_DIR->page_tables[768] = PAGE_DIR->page_tables[0];
 	reload_page_dir();
 	kdebug("PAGE_DIR->page_tables[768] = 0x%x\n", PAGE_DIR->page_tables[768]);
@@ -37,17 +40,18 @@ void vmm_init() {
 		kdebug("[%d] tmp_page->phys_addr = 0x%x, tmp_page = 0x%x\n", i, tmp_page->phys_addr, tmp_page);
 		vmm_add_free_page(tmp_page);
 	}
-
-	// Force allocation of multiple pages (testing)
-	for (i = 0; i < 1000; i++) {
-		kdebug("allocating chunk %d\n", i);
-		uint32_t * foo = kmalloc(sizeof(uint32_t) * 1000, 0);
-		foo[42] = 1;
+	// Pre-allocate the next few page tables to prevent getting into a situation
+	// where we need a new one during a page allocation
+	FREE_PAGE_TABLES = (Linked_List *)kmalloc(sizeof(Linked_List), KMALLOC_ZERO);
+	x86_page_table * tmp_page_table;
+	for (i = 0; i < MIN_SPARE_PAGE_TABLES; i++) {
+		tmp_page_table = (x86_page_table *)kmalloc(sizeof(x86_page_table), KMALLOC_ZERO + KMALLOC_ATOMIC);
+		Linked_List_push(FREE_PAGE_TABLES, tmp_page_table);
 	}
+
 }
 
 void reload_page_dir() {
-	kdebug("reloading page dir\n");
 	// Put the physical address of the page directory into the CR3 register
 	uint32_t val = (uint32_t)PAGE_DIR - KERN_OFFSET;
 	asm volatile ("movl %0, %%cr3" :: "r"(val));
@@ -69,19 +73,24 @@ void arch_vmm_map_page(vmm_page * page) {
 	kdebug("page->phys_addr=0x%x, page->virt_addr=0x%x, page->remain=%d\n", page->phys_addr, page->virt_addr, page->remain);
 	kdebug("page_dir_idx = %d, page_tbl_idx = %d\n", page_dir_idx, page_tbl_idx);
 	x86_page_table * page_table = get_page_table(page_dir_idx);
-	kdebug("old value = 0x%x\n", page_table->pages[page_tbl_idx]);
 	// Allocate a new page table, if needed
 	if (page_table == NULL) {
-		page_table = kmalloc(sizeof(x86_page_table), KMALLOC_ATOMIC);
-		PAGE_DIR->page_tables[page_dir_idx] = (x86_page_table *)((size_t)page_table - KERN_OFFSET + PAGE_FLAG_PRESENT + PAGE_FLAG_WRITABLE);
+		// TODO: allocate another page and push it onto the list
+		page_table = (x86_page_table *)Linked_List_shift(FREE_PAGE_TABLES);
+		PAGE_DIR->page_tables[page_dir_idx] = (size_t)page_table - KERN_OFFSET + PAGE_FLAG_PRESENT + PAGE_FLAG_WRITABLE;
+		kdebug("PAGE_DIR->page_tables[%d] = 0x%x\n", page_dir_idx, PAGE_DIR->page_tables[page_dir_idx]);
 	}
-	page_table->pages[page_tbl_idx] = (void *)( (size_t)page->phys_addr | (PAGE_FLAG_PRESENT + PAGE_FLAG_WRITABLE) );
-	kdebug("wrote 0x%x\n", page_table->pages[page_tbl_idx]);
+	page_table->pages[page_tbl_idx] = (size_t)page->phys_addr | (PAGE_FLAG_PRESENT + PAGE_FLAG_WRITABLE);
 	reload_page_dir();
 }
 
 x86_page_table * get_page_table(uint16_t page_dir_idx) {
-	return (x86_page_table *)((size_t)PAGE_DIR->page_tables[page_dir_idx] & 0xFFFFF000 + KERN_OFFSET);
+	uint32_t tmp_addr = (uint32_t)PAGE_DIR->page_tables[page_dir_idx] & 0xFFFFF000;
+	if (tmp_addr) {
+		return (x86_page_table *)(tmp_addr + KERN_OFFSET);
+	} else {
+		return NULL;
+	}
 }
 
 uint16_t get_page_dir_index(void * addr) {
