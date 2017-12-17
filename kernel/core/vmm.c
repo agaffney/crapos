@@ -26,7 +26,6 @@ void * kmalloc(size_t len, uint8_t flags) {
 		KMALLOC_CUR_PAGE = Linked_List_shift(&VMM_FREE_PAGES);
 		KMALLOC_CUR_PAGE->virt_addr = KMALLOC_NEXT_ADDR;
 		KMALLOC_CUR_PAGE->remain = PAGE_SIZE;
-		kdebug("current page - virt_addr=0x%x, phys_addr=0x%x, remain=%d\n", KMALLOC_CUR_PAGE->virt_addr, KMALLOC_CUR_PAGE->phys_addr, KMALLOC_CUR_PAGE->remain);
 		arch_vmm_map_page(KMALLOC_CUR_PAGE);
 		if (VMM_FREE_PAGES.length <= VMM_MIN_FREE_PAGES && !(flags & KMALLOC_ATOMIC)) {
 			int i;
@@ -44,7 +43,6 @@ void * kmalloc(size_t len, uint8_t flags) {
 	void * addr = KMALLOC_NEXT_ADDR;
 	KMALLOC_NEXT_ADDR += len;
 	KMALLOC_CUR_PAGE->remain -= len;
-	kdebug("len=%d, addr=0x%x, next_addr=0x%x, remain=%d\n", len, addr, KMALLOC_NEXT_ADDR, KMALLOC_CUR_PAGE->remain);
 	if (flags & KMALLOC_ZERO) {
 		int i;
 		for (i = 0; i < len; i++) {
@@ -56,8 +54,4 @@ void * kmalloc(size_t len, uint8_t flags) {
 
 void vmm_add_free_page(vmm_page * page) {
 	Linked_List_push(&VMM_FREE_PAGES, page);
-	int i;
-	for (i = 0; i < VMM_FREE_PAGES.length; i++) {
-		kdebug("VMM_FREE_PAGES[%d] - 0x%x, phys_addr=0x%x\n", i, Linked_List_get(&VMM_FREE_PAGES, i), ((vmm_page *)Linked_List_get(&VMM_FREE_PAGES, i))->phys_addr);
-	}
 }

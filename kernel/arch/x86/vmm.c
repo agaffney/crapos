@@ -24,11 +24,9 @@ void vmm_init() {
 	PAGE_DIR->page_tables[0] = ((uint32_t)&_boot_pagetab1 - KERN_OFFSET) | (PAGE_FLAG_PRESENT + PAGE_FLAG_WRITABLE);
 	PAGE_DIR->page_tables[768] = PAGE_DIR->page_tables[0];
 	reload_page_dir();
-	kdebug("PAGE_DIR->page_tables[768] = 0x%x\n", PAGE_DIR->page_tables[768]);
 	// Set the next available physical page to the location of our
 	// bootstrap heap
 	NEXT_PHYS_PAGE = &_bootstrap_heap_start - KERN_OFFSET;
-	kdebug("NEXT_PHYS_PAGE = 0x%x\n", NEXT_PHYS_PAGE);
 	// Seed the heap allocator with the physical pages from our bootstrap heap
 	uint8_t bootstrap_pages_count = (&_bootstrap_heap_end - &_bootstrap_heap_start) / ARCH_PAGE_SIZE;
 	vmm_page * tmp_page;
@@ -37,7 +35,6 @@ void vmm_init() {
 		tmp_page->phys_addr = arch_vmm_next_phys_page();
 		tmp_page->virt_addr = tmp_page->phys_addr + KERN_OFFSET;
 		tmp_page->remain = ARCH_PAGE_SIZE;
-		kdebug("[%d] tmp_page->phys_addr = 0x%x, tmp_page = 0x%x\n", i, tmp_page->phys_addr, tmp_page);
 		vmm_add_free_page(tmp_page);
 	}
 	// Pre-allocate the next few page tables to prevent getting into a situation
@@ -70,15 +67,12 @@ void * arch_vmm_next_phys_page() {
 void arch_vmm_map_page(vmm_page * page) {
 	uint16_t page_dir_idx = get_page_dir_index(page->virt_addr);
 	uint16_t page_tbl_idx = get_page_table_index(page->virt_addr);
-	kdebug("page->phys_addr=0x%x, page->virt_addr=0x%x, page->remain=%d\n", page->phys_addr, page->virt_addr, page->remain);
-	kdebug("page_dir_idx = %d, page_tbl_idx = %d\n", page_dir_idx, page_tbl_idx);
 	x86_page_table * page_table = get_page_table(page_dir_idx);
 	// Allocate a new page table, if needed
 	if (page_table == NULL) {
 		// TODO: allocate another page and push it onto the list
 		page_table = (x86_page_table *)Linked_List_shift(FREE_PAGE_TABLES);
 		PAGE_DIR->page_tables[page_dir_idx] = (size_t)page_table - KERN_OFFSET + PAGE_FLAG_PRESENT + PAGE_FLAG_WRITABLE;
-		kdebug("PAGE_DIR->page_tables[%d] = 0x%x\n", page_dir_idx, PAGE_DIR->page_tables[page_dir_idx]);
 	}
 	page_table->pages[page_tbl_idx] = (size_t)page->phys_addr | (PAGE_FLAG_PRESENT + PAGE_FLAG_WRITABLE);
 	reload_page_dir();
