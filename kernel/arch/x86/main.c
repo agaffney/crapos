@@ -8,9 +8,9 @@
 #include <core/kprint.h>
 
 void arch_init(void) {
+	vmm_init();
 	x86_video_init();
 	init_serial();
-	vmm_init();
 	idt_init();
 	kb_init();
 	char buf[20];
