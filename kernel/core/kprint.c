@@ -1,10 +1,13 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <core/kprint.h>
-// TODO: replace with generic serial/console interface
-#include <arch/x86/serial.h>
 #include <core/console.h>
 
+/*
+This was originally a static buffer to allow kprint() to work before there was
+a functional kmalloc(). I'm leaving it this way for now in case I need to debug
+the memory/page allocator again.
+*/
 char kprint_buf[2048];
 
 void kprint(const char* restrict format, ...) {
@@ -15,13 +18,5 @@ void kprint(const char* restrict format, ...) {
 
 	va_end(parameters);
 
-	/*
-	unsigned int i = 0;
-	while (kprint_buf[i] != '\0') {
-		write_serial(kprint_buf[i]);
-		i++;
-	}
-	*/
-	FILE_write(console_get(), kprint_buf, len);
+	FILE_write(CONSOLE, kprint_buf, len);
 }
-
