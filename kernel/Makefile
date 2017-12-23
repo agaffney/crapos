@@ -1,7 +1,7 @@
 include ../common.mk
 
 OUTPUT=kernel
-SUBDIRS=core $(KERNEL_ARCHDIR)
+SUBDIRS=core fs $(KERNEL_ARCHDIR)
 
 # Default target
 .PHONY: all

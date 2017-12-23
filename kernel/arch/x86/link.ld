@@ -17,6 +17,16 @@ SECTIONS
 	{
 		*(.rodata)
 	}
+	/*
+	 * I have no idea why, but these symbols need to be in their own section, or
+	 * we end up with weird offsets that break things
+	 */
+	.rodata.register_func ALIGN(4K) : AT (ADDR (.rodata.register_func) - 0xC0000000)
+	{
+		_register_func_vfs_start = .;
+		KEEP(*(SORT(.register_func.vfs.*)))
+		_register_func_vfs_end = .;
+	}
 	.data ALIGN (4K) : AT (ADDR (.data) - 0xC0000000)
 	{
 		*(.data)

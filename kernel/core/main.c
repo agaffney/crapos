@@ -11,6 +11,7 @@ void test_keyboard_event_handler(int, int);
 void kmain(void)
 {
 	arch_init();
+	vfs_init();
 	video_init();
 
 //	const char *str = "my first kernel with keyboard support";
