@@ -12,6 +12,7 @@ void vfs_init() {
 	}
 	for (i = 0; i < vfs_filesystems_idx; i++) {
 		kdebug("filesystem %d: name - %s\n", i, VFS_FILESYSTEMS[i]->name);
+		VFS_FILESYSTEMS[i]->readdir_func();
 	}
 }
 

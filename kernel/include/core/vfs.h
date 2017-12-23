@@ -14,18 +14,23 @@
  */
 typedef void (*vfs_register_func)();
 
-#define VFS_REGISTER_FUNC(__func) static vfs_register_func  __attribute__((section(".register_func.vfs." #__func))) _register_func_vfs_##__func = __func
+#define VFS_REGISTER_FUNC(__func) static vfs_register_func __attribute__((section(".register_func.vfs." #__func))) __attribute((unused)) _register_func_vfs_##__func = __func
 
 // Used to access start/end symbols defined using above macro
 extern vfs_register_func _register_func_vfs_start[], _register_func_vfs_end[];
 
 #define VFS_MAX_FILESYSTEMS 256
 
+typedef void (*vfs_readdir_func)();
+
 typedef struct {
 	char name[16];
+	vfs_readdir_func readdir_func;
 } vfs_filesystem;
 
 void vfs_add_filesystem(vfs_filesystem * fs);
+
+void vfs_init();
 
 struct _vfs_dir;
 struct _vfs_file;
