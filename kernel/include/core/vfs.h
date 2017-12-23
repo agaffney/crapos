@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 /*
  * The following typedef and #define are used to allow filesystem drivers to
@@ -21,35 +22,42 @@ extern vfs_register_func _register_func_vfs_start[], _register_func_vfs_end[];
 
 #define VFS_MAX_FILESYSTEMS 256
 
+typedef void (*vfs_mount_func)();
 typedef void (*vfs_readdir_func)();
 
 typedef struct {
 	char name[16];
+	vfs_mount_func   mount_func;
 	vfs_readdir_func readdir_func;
 } vfs_filesystem;
 
+void vfs_init();
 void vfs_add_filesystem(vfs_filesystem * fs);
 
-void vfs_init();
-
-struct _vfs_dir;
-struct _vfs_file;
-struct _vfs_inode;
-
-struct _vfs_dir {
-	struct _vfs_dir * parent;
+enum vfs_file_types {
+	VFS_FILE_TYPE_REGULAR = 1,
+	VFS_FILE_TYPE_DIRETORY,
+	VFS_FILE_TYPE_DEVICE,
+	VFS_FILE_TYPE_SYMLINK,
+	VFS_FILE_TYPE_NAMED_PIPE,
+	VFS_FILE_TYPE_SOCKET,
 };
 
-typedef struct _vfs_dir vfs_dir;
+typedef struct {
+	uint32_t inode_no;
+	char     name[];
+} vfs_dirent;
 
-struct _vfs_file {
+typedef struct {
+	uint8_t  type;
+	uint32_t uid;
+	uint32_t gid;
+	uint16_t mode;
+} vfs_file;
 
-};
+#define VFS_DIR_SEPARATOR '/'
 
-typedef struct _vfs_file vfs_file;
-
-struct _vfs_inode {
-
-};
-
-typedef struct _vfs_file vfs_file;
+typedef struct {
+	vfs_filesystem * fs;
+	void * mount_data;
+} vfs_mount;
