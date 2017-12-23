@@ -1,5 +1,4 @@
-#ifndef _STRING_H
-#define _STRING_H
+#pragma once
 
 #include "sys/cdefs.h"
 
@@ -11,4 +10,5 @@ void* memmove(void*, const void*, size_t);
 void* memset(void*, int, size_t);
 size_t strlen(const char*);
 
-#endif
+char *strcpy(char *dest, const char *src);
+char *strncpy(char *dest, const char *src, size_t n);
