@@ -1,7 +1,7 @@
 #include <arch/x86/vmm.h>
 #include <core/kprint.h>
 #include <core/vmm.h>
-#include <data/linked_list.h>
+#include <libk/data/linked_list.h>
 
 x86_page_dir * PAGE_DIR;
 char * NEXT_PHYS_PAGE;

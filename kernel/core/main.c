@@ -1,8 +1,8 @@
 #include <core/keyboard.h>
 #include <core/kprint.h>
 #include <core/video.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <libk/stdlib.h>
+#include <libk/stdio.h>
 
 extern void arch_init(void);
 

@@ -21,4 +21,4 @@ libk.a: $(LIBK_OBJS)
 	$(CC) -c -o $@ $< $(CFLAGS) -D__is_libc
 
 %.c.libk.o: %.c
-	$(CC) -c -o $@ $< $(KERNEL_CFLAGS) -D__is_libk
+	$(CC) -c -o $@ $< $(KERNEL_CFLAGS) -I $(LIBC_INCLUDE_DIR) -D__is_libk

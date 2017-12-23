@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <core/kprint.h>
 #include <core/vmm.h>
-#include <data/linked_list.h>
+#include <libk/data/linked_list.h>
 
 void * KMALLOC_NEXT_ADDR;
 vmm_page * KMALLOC_CUR_PAGE;

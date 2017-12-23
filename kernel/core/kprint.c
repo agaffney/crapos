@@ -1,5 +1,5 @@
-#include <ctype.h>
-#include <stdio.h>
+#include <libk/ctype.h>
+#include <libk/stdio.h>
 #include <core/kprint.h>
 #include <core/console.h>
 

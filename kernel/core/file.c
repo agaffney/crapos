@@ -1,5 +1,5 @@
 #include <core/file.h>
-#include <string.h>
+#include <libk/string.h>
 
 int FILE_read(FILE * f, char * buf, size_t len) {
 	if (f->read_func == NULL) {

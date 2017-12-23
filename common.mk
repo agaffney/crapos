@@ -27,7 +27,7 @@ LIBC_INCLUDE_DIR := $(BASEDIR)/libc/include
 
 include $(KERNEL_ARCHDIR)/config.mk
 
-KERNEL_CFLAGS := $(CFLAGS) -fno-stack-protector -ffreestanding -I $(KERNEL_INCLUDE_DIR) -I $(LIBC_INCLUDE_DIR) $(KERNEL_ARCH_CFLAGS)
+KERNEL_CFLAGS := $(CFLAGS) -fno-stack-protector -ffreestanding -I $(KERNEL_INCLUDE_DIR) $(KERNEL_ARCH_CFLAGS)
 # This is a hack to allow the use of the default gcc in the short term
 KERNEL_CFLAGS += -D_FEATURES_H
 LIBC_CFLAGS := $(CFLAGS) -I $(LIBC_INCLUDE_DIR)

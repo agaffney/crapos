@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 // It's necessary to declare these before defining them to break the circular
 // dependency between the two structs
