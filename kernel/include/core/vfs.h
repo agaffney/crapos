@@ -3,6 +3,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// Size of array holding references to filesystem drivers
+#define VFS_MAX_FILESYSTEMS 256
+
+#define VFS_DIR_SEPARATOR '/'
+
 /*
  * The following typedef and #define are used to allow filesystem drivers to
  * "register" themselves, so that we don't need to hard-code a list anywhere.
@@ -20,15 +25,12 @@ typedef void (*vfs_register_func)();
 // Used to access start/end symbols defined using above macro
 extern vfs_register_func _register_func_vfs_start[], _register_func_vfs_end[];
 
-#define VFS_MAX_FILESYSTEMS 256
-
-typedef void (*vfs_mount_func)();
-typedef void (*vfs_readdir_func)();
+struct _vfs_mount_args;
 
 typedef struct {
 	char name[16];
-	vfs_mount_func   mount_func;
-	vfs_readdir_func readdir_func;
+	void (*mount_func)(struct _vfs_mount_args *);
+	void (*readdir_func)();
 } vfs_filesystem;
 
 void vfs_init();
@@ -43,11 +45,13 @@ enum vfs_file_types {
 	VFS_FILE_TYPE_SOCKET,
 };
 
+// Directory entry
 typedef struct {
 	uint32_t inode_no;
 	char     name[];
 } vfs_dirent;
 
+// Inode
 typedef struct {
 	uint8_t  type;
 	uint32_t uid;
@@ -55,9 +59,17 @@ typedef struct {
 	uint16_t mode;
 } vfs_file;
 
-#define VFS_DIR_SEPARATOR '/'
-
+// Mounted filesystem instance
 typedef struct {
 	vfs_filesystem * fs;
 	void * mount_data;
 } vfs_mount;
+
+// Used to pass mount args to filesystem driver
+struct _vfs_mount_args {
+	char device[256];
+	char mountpoint[1024];
+	char options[4096];
+};
+
+typedef struct _vfs_mount_args vfs_mount_args;

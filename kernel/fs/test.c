@@ -9,7 +9,8 @@ void fs_test_readdir() {
 	kdebug("here I am\n");
 }
 
-void fs_test_mount() {
+void fs_test_mount(vfs_mount_args * args) {
+	kdebug("device = %s, mountpoint = %s, options = %s\n", args->device, args->mountpoint, args->options);
 	vfs_mount * mount = (vfs_mount *)kmalloc(sizeof(vfs_mount), KMALLOC_ZERO);
 	mount->mount_data = (void *)kmalloc(sizeof(fs_test_mount_info), KMALLOC_ZERO);
 }

@@ -12,7 +12,8 @@ void vfs_init() {
 	}
 	for (i = 0; i < vfs_filesystems_idx; i++) {
 		kdebug("filesystem %d: name - %s\n", i, VFS_FILESYSTEMS[i]->name);
-		VFS_FILESYSTEMS[i]->mount_func();
+		vfs_mount_args foo = { .device = "/dev/sda1", .mountpoint = "/mnt/foo", .options = "rw,acl" };
+		VFS_FILESYSTEMS[i]->mount_func(&foo);
 	}
 }
 
