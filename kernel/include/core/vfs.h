@@ -26,12 +26,14 @@ typedef void (*vfs_register_func)();
 extern vfs_register_func _register_func_vfs_start[], _register_func_vfs_end[];
 
 struct _vfs_mount_args;
+struct _vfs_mount;
 
-typedef struct {
+struct _vfs_filesystem {
 	char name[16];
-	void (*mount_func)(struct _vfs_mount_args *);
+	struct _vfs_mount * (*mount_func)(struct _vfs_mount_args *);
 	void (*readdir_func)();
-} vfs_filesystem;
+};
+typedef struct _vfs_filesystem vfs_filesystem;
 
 void vfs_init();
 void vfs_add_filesystem(vfs_filesystem * fs);
@@ -46,24 +48,30 @@ enum vfs_file_types {
 };
 
 // Directory entry
-typedef struct {
+struct _vfs_dirent {
 	uint32_t inode_no;
 	char     name[];
-} vfs_dirent;
+};
+
+typedef struct _vfs_dirent vfs_dirent;
 
 // Inode
-typedef struct {
+struct _vfs_file {
 	uint8_t  type;
 	uint32_t uid;
 	uint32_t gid;
 	uint16_t mode;
-} vfs_file;
+};
+
+typedef struct _vfs_file vfs_file;
 
 // Mounted filesystem instance
-typedef struct {
+struct _vfs_mount {
 	vfs_filesystem * fs;
 	void * mount_data;
-} vfs_mount;
+};
+
+typedef struct _vfs_mount vfs_mount;
 
 // Used to pass mount args to filesystem driver
 struct _vfs_mount_args {
