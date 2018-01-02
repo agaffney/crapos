@@ -1,9 +1,9 @@
 # Declare constants for the multiboot header.
-.set MB_ALIGN,    1<<0                   # align loaded modules on page boundaries
-.set MB_MEMINFO,  1<<1                   # provide memory map
-.set MB_FLAGS,    MB_ALIGN | MB_MEMINFO  # this is the Multiboot 'flag' field
-.set MB_MAGIC,    0x1BADB002             # 'magic number' lets bootloader find the header
-.set MB_CHECKSUM, -(MB_MAGIC + MB_FLAGS) # checksum of above, to prove we are multiboot
+.set MB_FLAG_ALIGN,   1<<0                             # align loaded modules on page boundaries
+.set MB_FLAG_MEMINFO, 1<<1                             # provide memory map
+.set MB_FLAGS,        MB_FLAG_ALIGN | MB_FLAG_MEMINFO  # this is the Multiboot 'flag' field
+.set MB_MAGIC,        0x1BADB002                       # 'magic number' lets bootloader find the header
+.set MB_CHECKSUM,     -(MB_MAGIC + MB_FLAGS)           # checksum of above, to prove we are multiboot
 
 # Declare a multiboot header that marks the program as a kernel.
 .section .multiboot
@@ -42,6 +42,15 @@ _boot_pagetab1:
 	.skip 4096
 # Further page tables may be required if the kernel grows beyond 3 MiB.
 
+# Global variables for multiboot info
+.section .data
+.global _multiboot_info
+_multiboot_info:
+.long 0
+.global _multiboot_magic_value
+_multiboot_magic_value:
+.long 0
+
 # The kernel entry point.
 .section .text
 .global _start
@@ -58,7 +67,7 @@ _start:
 
 1:
 	# Break out of loop once we reach the end of current kernel memory
-	cmpl $(_kernel_end - 0xC0000000), %esi
+	cmpl $(_kernel_end - KERN_OFFSET), %esi
 	jge 2f
 
 	# Copy current page start address into EDX
@@ -102,15 +111,16 @@ _start:
 _start_higher_half:
 	# At this point, paging is fully set up and enabled.
 
-	# Unmap the identity mapping as it is now unnecessary.
-	#movl $0, _boot_pagedir + 0
-
 	# Reload crc3 to force a TLB flush so the changes to take effect.
 	movl %cr3, %ecx
 	movl %ecx, %cr3
 
-	# Set up the stack.
+	# Set up the stack pointer
 	mov $bootstrap_stack_top, %esp
+
+	# Store the pointer to the multiboot info and the magic value
+	movl %ebx, _multiboot_info
+	movl %eax, _multiboot_magic_value
 
 	# Enter the high-level kernel.
 	call kmain
