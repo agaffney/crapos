@@ -66,6 +66,16 @@ int vsprintf(char *out, const char* restrict format, va_list parameters) {
 				}
 				format++;
 				written += len;
+			} else if (format[0] == 'b') {
+				// Non-standard format specifier for binary output
+				unsigned int val = va_arg(parameters, unsigned int);
+				itoa(val, itoa_buf, 2);
+				size_t len = strlen(itoa_buf);
+				for (i = 0; i < len; i++) {
+					out[written + i] = itoa_buf[i];
+				}
+				format++;
+				written += len;
 			}
 		} else {
 			out[written] = format[0];
