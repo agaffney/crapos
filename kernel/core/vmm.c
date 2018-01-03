@@ -49,6 +49,7 @@ void * kmalloc(size_t len, uint8_t flags) {
 			*(char *)((size_t)addr + i) = '\0';
 		}
 	}
+//	kdebug("allocated %d bytes at %#x\n", len, addr);
 	return addr;
 }
 

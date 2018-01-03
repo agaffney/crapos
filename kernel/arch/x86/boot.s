@@ -61,15 +61,12 @@ _start:
 	movl $(_boot_pagetab1 - KERN_OFFSET), %edi
 	# We're mapping up to the first 1024 pages (4MB)
 	# This covers the first 1MB, which is normally reserved for x86-ey things,
-	# plus up to another 3MB for the kernel
+	# plus up to another 3MB for the kernel. This also makes it easier to get
+	# at the multiboot info, which can end up *after* the kernel image in memory.
 	movl $0, %esi
 	movl $1024, %ecx
 
 1:
-	# Break out of loop once we reach the end of current kernel memory
-	cmpl $(_kernel_end - KERN_OFFSET), %esi
-	jge 2f
-
 	# Copy current page start address into EDX
 	movl %esi, %edx
 	# Set bits for present/writable

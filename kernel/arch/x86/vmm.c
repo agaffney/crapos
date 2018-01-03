@@ -12,6 +12,8 @@ vmm_page initial_pages[4];
 
 Linked_List * FREE_PAGE_TABLES;
 
+// TODO: rewrite initial page tables to only cover first 1MB (identity mapped)
+// and kernel mapped at 3GB + 1MB
 void vmm_init() {
 	int i;
 	// Reuse initial page directory from boot.s to conserve memory

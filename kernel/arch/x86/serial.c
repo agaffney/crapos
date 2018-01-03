@@ -4,6 +4,9 @@
 #include <core/console.h>
 #include <core/vmm.h>
  
+// Pre-allocate to allow usage before VMM subsystem is initialized
+FILE serial_com1;
+
 void init_serial() {
 	outb(SERIAL_COM1_ADDR + 1, 0x00);    // Disable all interrupts
 	outb(SERIAL_COM1_ADDR + 3, 0x80);    // Enable DLAB (set baud rate divisor)
@@ -13,10 +16,9 @@ void init_serial() {
 	outb(SERIAL_COM1_ADDR + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
 	outb(SERIAL_COM1_ADDR + 4, 0x0B);    // IRQs enabled, RTS/DSR set
 
-	FILE * serial_com1 = (FILE *)kmalloc(sizeof(FILE), KMALLOC_ZERO);
-	serial_com1->write_func = serial_write;
+	serial_com1.write_func = serial_write;
 
-	console_set(serial_com1);
+	console_set(&serial_com1);
 }
 
 int is_transmit_empty() {
