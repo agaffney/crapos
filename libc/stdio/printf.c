@@ -76,7 +76,11 @@ int vsprintf(char *out, const char* restrict format, va_list parameters) {
 			} else if (format[0] == 's') {
 				const char* str = va_arg(parameters, const char*);
 				size_t len = strlen(str);
-				int i;
+				if (pad_char) {
+					for (i = len; i < field_width; i++) {
+						out[written++] = pad_char;
+					}
+				}
 				for (i = 0; i < len; i++) {
 					out[written + i] = str[i];
 				}
