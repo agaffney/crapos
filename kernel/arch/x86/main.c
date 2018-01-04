@@ -29,11 +29,10 @@ void arch_init(void) {
 
 void process_multiboot() {
 	if (_multiboot_magic_value != MULTIBOOT_BOOTLOADER_MAGIC) {
-		kdebug("the multiboot structure does not appear to be valid\n");
+		kprint("multiboot: the multiboot info structure does not appear to be valid\n");
 		return;
 	}
-	kdebug("_multiboot_info = %#x\n", _multiboot_info);
-	kdebug("flags = %016b\n", _multiboot_info->flags);
+/*
 	if (_multiboot_info->flags & MULTIBOOT_INFO_MEMORY) {
 		kdebug("flags (memory) = %016b\n", (_multiboot_info->flags & MULTIBOOT_INFO_MEMORY));
 		kdebug("mem_lower = %uKB, mem_upper = %uKB\n", _multiboot_info->mem_lower, _multiboot_info->mem_upper);
@@ -42,34 +41,37 @@ void process_multiboot() {
 		kdebug("flags (bootdev) = %016b\n", (_multiboot_info->flags & MULTIBOOT_INFO_BOOTDEV));
 		kdebug("boot_device = %#x\n", _multiboot_info->boot_device);
 	}
+*/
 	if (_multiboot_info->flags & MULTIBOOT_INFO_CMDLINE) {
-		// Copy kernel commandline into global buffer
-		strncpy(cmdline, (char *)_multiboot_info->cmdline, KERNEL_CMDLINE_MAX_LEN);
-		kprint("Kernel commandline (saved): %s\n", cmdline);
+		cmdline_init((char *)_multiboot_info->cmdline);
 	}
+/*
 	if (_multiboot_info->flags & MULTIBOOT_INFO_ELF_SHDR) {
 		multiboot_elf_section_header_table_t *multiboot_elf_sec = &(_multiboot_info->u.elf_sec);
 
-		kprint("multiboot_elf_sec: num = %u, size = 0x%x,"
+		kdebug("multiboot_elf_sec: num = %u, size = 0x%x,"
 			" addr = 0x%x, shndx = 0x%x\n",
 			(unsigned) multiboot_elf_sec->num, (unsigned) multiboot_elf_sec->size,
 			(unsigned) multiboot_elf_sec->addr, (unsigned) multiboot_elf_sec->shndx);
 	}
+*/
+	// TODO: do something useful with this information
 	if (_multiboot_info->flags & MULTIBOOT_INFO_MEM_MAP) {
 		multiboot_memory_map_t *mmap;
 
 		kprint("mmap_addr = 0x%x, mmap_length = 0x%x\n", (unsigned) _multiboot_info->mmap_addr, (unsigned) _multiboot_info->mmap_length);
-		for (mmap = (multiboot_memory_map_t *) _multiboot_info->mmap_addr;
-		     (unsigned long) mmap < _multiboot_info->mmap_addr + _multiboot_info->mmap_length;
-		     mmap = (multiboot_memory_map_t *) ((unsigned long) mmap + mmap->size + sizeof (mmap->size)))
-		kprint(" size = %#x, base_addr = 0x%x-%08x,"
-			" length = 0x%x-%08x (%dKB), type = %#x\n",
-			(unsigned) mmap->size,
-			(unsigned) (mmap->addr >> 32),
-			(unsigned) (mmap->addr & 0xffffffff),
-			(unsigned) (mmap->len >> 32),
-			(unsigned) (mmap->len & 0xffffffff),
-			(unsigned) ((mmap->len & 0xffffffff) / 1024),
-			(unsigned) mmap->type);
+		for (
+			mmap = (multiboot_memory_map_t *) _multiboot_info->mmap_addr;
+			(unsigned long) mmap < _multiboot_info->mmap_addr + _multiboot_info->mmap_length;
+			mmap = (multiboot_memory_map_t *) ((unsigned long) mmap + mmap->size + sizeof (mmap->size))
+		) {
+			kprint("multiboot: [mem 0x%08x%08x-0x%08x%08x] % 10s (%dKB)\n",
+				(unsigned) (mmap->addr >> 32),
+				(unsigned) (mmap->addr & 0xffffffff),
+				(unsigned) ((mmap->addr + mmap->len - 1) >> 32),
+				(unsigned) ((mmap->addr + mmap->len - 1) & 0xffffffff),
+				(mmap->type == 1 ? "available" : "reserved"),
+				(unsigned) ((mmap->len & 0xffffffff) / 1024));
+		}
 	}
 }
