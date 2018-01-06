@@ -6,9 +6,10 @@ off of:
 
 https://github.com/arjun024/mkeykernel
 
-but is also heavily influenced by the tutorials at:
+but is also heavily influenced by the docs at:
 
 http://wiki.osdev.org/Tutorials
+http://www.flingos.co.uk/docs/#conceptual-docs
 
 ## Features
 
@@ -17,3 +18,7 @@ http://wiki.osdev.org/Tutorials
 * basic VGA text-mode output
 * combined libc/libk
 * mostly sane and maintanable build system
+* serial output
+* rudimentary "file" support
+* rudimentary VFS subsystem
+* basic memory/page allocator
