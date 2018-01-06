@@ -1,23 +1,28 @@
+#include <kernel.h>
 #include <core/keyboard.h>
 #include <core/kprint.h>
 #include <core/video.h>
 #include <core/vfs.h>
+#include <core/cmdline.h>
 #include <libk/stdlib.h>
 #include <libk/stdio.h>
 
+extern void arch_early_init(void);
 extern void arch_init(void);
 
 void test_keyboard_event_handler(int, int);
 
 void kmain(void)
 {
+	arch_early_init();
+	kprint(KERNEL_NAME " kernel version " KERNEL_VERSION "\n");
+	cmdline_parse();
 	arch_init();
 	vfs_init();
 	video_init();
 
-//	const char *str = "my first kernel with keyboard support";
 	video_clear();
-	kprint("Welcome to CrapOS!\n\n\n");
+	kprint("\n\nWelcome to CrapOS!\n\n\n");
 
 //	register_keyboard_event_handler(test_keyboard_event_handler);
 

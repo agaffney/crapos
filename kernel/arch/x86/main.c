@@ -14,11 +14,25 @@ extern multiboot_info_t* _multiboot_info;
 extern unsigned int _multiboot_magic_value;
 
 void process_multiboot();
+int multiboot_is_valid();
+void multiboot_cmdline();
+void multiboot_memory_map();
 
-void arch_init(void) {
+int multiboot_valid;
+
+void arch_early_init() {
 	x86_video_init();
 	init_serial();
-	process_multiboot();
+	multiboot_valid = multiboot_is_valid();
+	if (multiboot_valid) {
+		multiboot_cmdline();
+	}
+}
+
+void arch_init(void) {
+	if (multiboot_valid) {
+		multiboot_memory_map();
+	}
 	vmm_init();
 	idt_init();
 	kb_init();
@@ -27,11 +41,18 @@ void arch_init(void) {
 	kprint("CPU vendor: %s\n", buf);
 }
 
-void process_multiboot() {
+void multiboot_cmdline() {
+	if (_multiboot_info->flags & MULTIBOOT_INFO_CMDLINE) {
+		cmdline_init((char *)_multiboot_info->cmdline);
+	}
+}
+
+int multiboot_is_valid() {
 	if (_multiboot_magic_value != MULTIBOOT_BOOTLOADER_MAGIC) {
 		kprint("multiboot: the multiboot info structure does not appear to be valid\n");
-		return;
+		return 0;
 	}
+	return 1;
 /*
 	if (_multiboot_info->flags & MULTIBOOT_INFO_MEMORY) {
 		kdebug("flags (memory) = %016b\n", (_multiboot_info->flags & MULTIBOOT_INFO_MEMORY));
@@ -41,11 +62,6 @@ void process_multiboot() {
 		kdebug("flags (bootdev) = %016b\n", (_multiboot_info->flags & MULTIBOOT_INFO_BOOTDEV));
 		kdebug("boot_device = %#x\n", _multiboot_info->boot_device);
 	}
-*/
-	if (_multiboot_info->flags & MULTIBOOT_INFO_CMDLINE) {
-		cmdline_init((char *)_multiboot_info->cmdline);
-	}
-/*
 	if (_multiboot_info->flags & MULTIBOOT_INFO_ELF_SHDR) {
 		multiboot_elf_section_header_table_t *multiboot_elf_sec = &(_multiboot_info->u.elf_sec);
 
@@ -55,6 +71,9 @@ void process_multiboot() {
 			(unsigned) multiboot_elf_sec->addr, (unsigned) multiboot_elf_sec->shndx);
 	}
 */
+}
+
+void multiboot_memory_map() {
 	// TODO: do something useful with this information
 	if (_multiboot_info->flags & MULTIBOOT_INFO_MEM_MAP) {
 		multiboot_memory_map_t *mmap;

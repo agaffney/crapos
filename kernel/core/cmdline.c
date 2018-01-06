@@ -6,5 +6,8 @@ char cmdline[KERNEL_CMDLINE_MAX_LEN + 1];
 
 void cmdline_init(const char * input) {
 	strncpy(cmdline, input, KERNEL_CMDLINE_MAX_LEN);
+}
+
+void cmdline_parse() {
 	kprint("Command line: %s\n", cmdline);
 }
