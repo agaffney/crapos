@@ -6,14 +6,14 @@ struct gdtdesc kgdt[GDT_SIZE];
 struct tss default_tss;
 struct gdtr kgdtr;
 
-void gdt_init_desc(uint32_t base, uint32_t limit, uint8_t access, uint8_t flags, struct gdtdesc *desc) {
-	desc->limit0_15 = (limit & 0xffff);
-	desc->base0_15 = (base & 0xffff);
-	desc->base16_23 = (base & 0xff0000) >> 16;
-	desc->access = access;
-	desc->limit16_19 = (limit & 0xf0000) >> 16;
-	desc->flags = (flags & 0xf);
-	desc->base24_31 = (base & 0xff000000) >> 24;
+void gdt_init_desc(size_t idx, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags) {
+	kgdt[idx].limit0_15 = (limit & 0xffff);
+	kgdt[idx].base0_15 = (base & 0xffff);
+	kgdt[idx].base16_23 = (base & 0xff0000) >> 16;
+	kgdt[idx].access = access;
+	kgdt[idx].limit16_19 = (limit & 0xf0000) >> 16;
+	kgdt[idx].flags = (flags & 0xf);
+	kgdt[idx].base24_31 = (base & 0xff000000) >> 24;
 }
 
 void gdt_init() {
@@ -23,41 +23,48 @@ void gdt_init() {
 	default_tss.ss0 = 0x18;
 
 	// null descriptor
-	gdt_init_desc(0x0, 0x0, 0x0, 0x0, &kgdt[0]);
+	gdt_init_desc(GDT_INDEX_NULL, 0x0, 0x0, 0x0, 0x0);
 
 	// kernel code
-	gdt_init_desc(0x0, 0xFFFFF,
+	gdt_init_desc(GDT_INDEX_KCODE,
+		0x0, 0xFFFFF,
 		GDT_ACCESS_KERN_BASE | GDT_ACCESS_EXEC,
-		GDT_FLAGS_DEFAULT, &kgdt[1]);
+		GDT_FLAGS_DEFAULT);
 	// kernel data
-	gdt_init_desc(0x0, 0xFFFFF,
+	gdt_init_desc(GDT_INDEX_KDATA,
+		0x0, 0xFFFFF,
 		GDT_ACCESS_KERN_BASE,
-		GDT_FLAGS_DEFAULT, &kgdt[2]);
+		GDT_FLAGS_DEFAULT);
 	// kernel stack
-	gdt_init_desc(0x0, 0x0,
+	gdt_init_desc(GDT_INDEX_KSTACK,
+		0x0, 0x0,
 		GDT_ACCESS_KERN_BASE | GDT_ACCESS_DC,
-		GDT_FLAGS_DEFAULT, &kgdt[3]);
+		GDT_FLAGS_DEFAULT);
 
 	// userspace code
-	gdt_init_desc(0x0, 0xFFFFF,
+	gdt_init_desc(GDT_INDEX_UCODE,
+		0x0, 0xFFFFF,
 		GDT_ACCESS_USER_BASE | GDT_ACCESS_DC | GDT_ACCESS_EXEC,
-		GDT_FLAGS_DEFAULT, &kgdt[4]);
+		GDT_FLAGS_DEFAULT);
 	// userspace data
-	gdt_init_desc(0x0, 0xFFFFF,
+	gdt_init_desc(GDT_INDEX_UDATA,
+		0x0, 0xFFFFF,
 		GDT_ACCESS_USER_BASE,
-		GDT_FLAGS_DEFAULT, &kgdt[5]);
+		GDT_FLAGS_DEFAULT);
 	// userspace stack
-	gdt_init_desc(0x0, 0x0,
+	gdt_init_desc(GDT_INDEX_USTACK,
+		0x0, 0x0,
 		GDT_ACCESS_USER_BASE | GDT_ACCESS_DC,
-		GDT_FLAGS_DEFAULT, &kgdt[6]);
+		GDT_FLAGS_DEFAULT);
 
 	// TSS
-	gdt_init_desc((uint32_t) & default_tss, sizeof(default_tss) - 1,
+	gdt_init_desc(GDT_INDEX_DEF_TSS,
+		(uint32_t) & default_tss, sizeof(default_tss) - 1,
 		GDT_ACCESS_PRESENT | GDT_ACCESS_EXEC | GDT_ACCESS_PRIV_3,
-		0x00, &kgdt[7]);
+		0x00);
 
 	// initialize the gdtr structure
-	kgdtr.limit = GDT_SIZE * sizeof(struct gdtdesc) - 1;
+	kgdtr.limit = GDT_SIZE * sizeof(struct gdtdesc);
 	kgdtr.base = GDT_BASE;
 
 	// copy the gdtr to its memory area
@@ -67,8 +74,8 @@ void gdt_init() {
 	asm("lgdtl (kgdtr)");
 
 	/*
-	 * Stick index of kernel data segment selector (0x10) in DS/ES/FS/GS, and
-	 * then long jump using kernel code segment selector index (0x08)
+	 * Stick offset of KDATA segment selector (0x10) in DS/ES/FS/GS, and
+	 * then long jump using KCODE segment selector offset (0x08)
 	 */
 	asm("   movw $0x10, %ax	\n \
             movw %ax, %ds	\n \

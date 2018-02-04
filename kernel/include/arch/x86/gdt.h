@@ -1,9 +1,21 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
-#define GDT_SIZE 255
+#define GDT_SIZE 32
 #define GDT_BASE 0x00000800
+
+enum gdt_indexes {
+	GDT_INDEX_NULL = 0,
+	GDT_INDEX_KCODE,
+	GDT_INDEX_KDATA,
+	GDT_INDEX_KSTACK,
+	GDT_INDEX_UCODE,
+	GDT_INDEX_UDATA,
+	GDT_INDEX_USTACK,
+	GDT_INDEX_DEF_TSS,
+};
 
 #define GDT_ACCESS_ACCESSED   (1 << 0)
 #define GDT_ACCESS_RW         (1 << 1)
@@ -62,4 +74,6 @@ struct tss {
 	uint16_t debug_flag, io_map;
 } __attribute__ ((packed));
 
-void gdt_init_desc(uint32_t base, uint32_t limit, uint8_t access, uint8_t other, struct gdtdesc *desc);
+void gdt_init_desc(size_t idx, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags);
+
+void gdt_init();

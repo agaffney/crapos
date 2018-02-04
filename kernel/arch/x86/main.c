@@ -3,6 +3,7 @@
 #include <arch/x86/keyboard.h>
 #include <arch/x86/serial.h>
 #include <arch/x86/cpuid.h>
+#include <arch/x86/gdt.h>
 #include <arch/x86/idt.h>
 #include <arch/x86/vmm.h>
 #include <arch/x86/multiboot.h>
