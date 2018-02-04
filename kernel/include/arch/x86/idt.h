@@ -1,5 +1,8 @@
 #pragma once
 
+#include <arch/x86/gdt.h>
+#include <stdint.h>
+
 /*     Ports
 *	 PIC1	PIC2
 *Command 0x20	0xA0
@@ -17,10 +20,16 @@
 // Used to signal to PIC that the interrupt is being handled
 #define PIC_EOI_ACK 0x20
 
-#define KERNEL_CODE_SEGMENT_OFFSET 0x08
-
 #define IDT_SIZE 256
-#define IDT_TYPE_INTERRUPT_GATE 0x8e
+#define IDT_BASE 0x00000000
+
+#define IDT_TYPE_INT_GATE   0x0E
+#define IDT_TYPE_TRAP_GATE  0x0F
+#define IDT_TYPE_TASK_GATE  0x05
+
+#define IDT_ATTR_PRESENT    (1 << 7)
+#define IDT_ATTR_PRIV_0     (0 << 5)
+#define IDT_ATTR_PRIV_3     (3 << 5)
 
 struct IDT_entry{
 	unsigned short int offset_lowerbits;
@@ -30,9 +39,28 @@ struct IDT_entry{
 	unsigned short int offset_higherbits;
 };
 
-// Defined via ASM
-extern void load_idt(unsigned long *);
+// IDT segment descriptor
+struct idtdesc {
+	uint16_t offset0_15;
+	uint16_t selector;
+	uint8_t  _unused;
+	uint8_t  type_attr;
+	uint16_t offset16_31;
+} __attribute__ ((packed));
 
+// IDT registry "pointer"
+struct idtr {
+	uint16_t limit;
+	uint32_t base;
+} __attribute__ ((packed));
+
+// Defined via ASM
 extern void keyboard_handler(void);
+extern void _default_int_handler(void);
+extern void _asm_int_0(void);
 
 void idt_init(void);
+
+void idt_init_desc(uint8_t idx, void * handler_func, uint16_t selector, uint8_t type, uint8_t attr);
+
+void default_int_handler(uint32_t);

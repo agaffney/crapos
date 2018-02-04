@@ -6,7 +6,7 @@ struct gdtdesc kgdt[GDT_SIZE];
 struct tss default_tss;
 struct gdtr kgdtr;
 
-void gdt_init_desc(size_t idx, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags) {
+void gdt_init_desc(uint8_t idx, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags) {
 	kgdt[idx].limit0_15 = (limit & 0xffff);
 	kgdt[idx].base0_15 = (base & 0xffff);
 	kgdt[idx].base16_23 = (base & 0xff0000) >> 16;

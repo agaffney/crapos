@@ -26,6 +26,12 @@ void kmain(void)
 
 //	register_keyboard_event_handler(test_keyboard_event_handler);
 
+/*
+	// Test interrupt handler with divide by zero
+	int foo = 5 / 0;
+	kdebug("%d\n", foo);
+*/
+
 	while(1);
 }
 

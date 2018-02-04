@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <stddef.h>
 
 #define GDT_SIZE 32
 #define GDT_BASE 0x00000800
@@ -74,6 +73,6 @@ struct tss {
 	uint16_t debug_flag, io_map;
 } __attribute__ ((packed));
 
-void gdt_init_desc(size_t idx, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags);
+void gdt_init_desc(uint8_t idx, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags);
 
 void gdt_init();

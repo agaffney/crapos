@@ -1,20 +1,23 @@
 #include <arch/x86/io.h>
 #include <arch/x86/idt.h>
+#include <core/kprint.h>
+#include <libk/string.h>
 
-struct IDT_entry IDT[IDT_SIZE];
+struct idtdesc kidt[IDT_SIZE];
+struct idtr kidtr;
+
+void idt_init_desc(uint8_t idx, void * handler_func, uint16_t selector, uint8_t type, uint8_t attr) {
+	kdebug("idx=%d, func=%#x, selector=%d, type=%d, attr=%d\n", idx, handler_func, selector, type, attr);
+	kidt[idx].offset0_15 = (uint32_t)handler_func & 0xffff;
+	kidt[idx].selector = selector * sizeof(struct gdtdesc);
+	kidt[idx].type_attr = type | attr;
+	kidt[idx].offset16_31 = ((uint32_t)handler_func & 0xffff0000) >> 16;
+}
 
 void idt_init(void) {
-	unsigned long keyboard_address;
-	unsigned long idt_address;
-	unsigned long idt_ptr[2];
+	idt_init_desc(0, _asm_int_0, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 
-	/* populate IDT entry of keyboard's interrupt (IRQ1) */
-	keyboard_address = (unsigned long)keyboard_handler; 
-	IDT[PIC1_OFFSET_ADDR + 1].offset_lowerbits = keyboard_address & 0xffff;
-	IDT[PIC1_OFFSET_ADDR + 1].selector = KERNEL_CODE_SEGMENT_OFFSET;
-	IDT[PIC1_OFFSET_ADDR + 1].zero = 0;
-	IDT[PIC1_OFFSET_ADDR + 1].type_attr = IDT_TYPE_INTERRUPT_GATE;
-	IDT[PIC1_OFFSET_ADDR + 1].offset_higherbits = (keyboard_address & 0xffff0000) >> 16;
+	idt_init_desc(PIC1_OFFSET_ADDR + 1, keyboard_handler, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 
 	/* ICW1 - begin initialization */
 	outb(PIC1_COMMAND_ADDR, 0x11);
@@ -41,10 +44,15 @@ void idt_init(void) {
 	outb(PIC1_DATA_ADDR, 0xff);
 	outb(PIC2_DATA_ADDR, 0xff);
 
-	/* fill the IDT descriptor */
-	idt_address = (unsigned long)IDT;
-	idt_ptr[0] = (sizeof (struct IDT_entry) * IDT_SIZE) + ((idt_address & 0xffff) << 16);
-	idt_ptr[1] = idt_address >> 16 ;
+	kidtr.base = IDT_BASE;
+	kidtr.limit = (sizeof(struct idtdesc) * IDT_SIZE) - 1;
 
-	load_idt(idt_ptr);
+	// copy the gdtr to its memory area
+	memcpy((char *) kidtr.base, (char *) kidt, kidtr.limit + 1);
+
+	asm("lidt (kidtr)");
+}
+
+void default_int_handler(uint32_t code) {
+	kdebug("received interrupt: %d\n", code);
 }
