@@ -21,10 +21,12 @@ void multiboot_memory_map();
 int multiboot_valid;
 
 void arch_early_init() {
+	// video and serial init happen early to allow easier debugging
 	x86_video_init();
 	init_serial();
 	multiboot_valid = multiboot_is_valid();
 	if (multiboot_valid) {
+		// Capture cmdline early before we possibly overwrite the memory
 		multiboot_cmdline();
 	}
 }
@@ -33,6 +35,7 @@ void arch_init(void) {
 	if (multiboot_valid) {
 		multiboot_memory_map();
 	}
+	gdt_init();
 	vmm_init();
 	idt_init();
 	kb_init();
@@ -77,8 +80,6 @@ void multiboot_memory_map() {
 	// TODO: do something useful with this information
 	if (_multiboot_info->flags & MULTIBOOT_INFO_MEM_MAP) {
 		multiboot_memory_map_t *mmap;
-
-		kprint("mmap_addr = 0x%x, mmap_length = 0x%x\n", (unsigned) _multiboot_info->mmap_addr, (unsigned) _multiboot_info->mmap_length);
 		for (
 			mmap = (multiboot_memory_map_t *) _multiboot_info->mmap_addr;
 			(unsigned long) mmap < _multiboot_info->mmap_addr + _multiboot_info->mmap_length;
