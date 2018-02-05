@@ -11,7 +11,7 @@
 _asm_int_\num:
 	SAVE_REGS
 	# Push interrupt number onto the stack
-	pushl $0x\num
+	pushl $\num
 	call default_int_handler
 	# Remove what we'd previously pushed onto the stack for consistency
 	popl %eax
