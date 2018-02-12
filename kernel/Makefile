@@ -10,7 +10,11 @@ all: $(OUTPUT)
 KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
 LIBK_OBJ = $(BASEDIR)/libc/libk.a
 
-QEMU_COMMON_OPTS = -nographic -kernel $(OUTPUT) -append "foo=bar baz=123 test" -no-reboot #-d int
+# Serial console only
+QEMU_OUTPUT_OPTS = -nographic
+# VGA/keyboard and serial console
+#QEMU_OUTPUT_OPTS = -serial stdio -display sdl
+QEMU_COMMON_OPTS = -kernel $(OUTPUT) -append "foo=bar baz=123 test" -no-reboot $(QEMU_OUTPUT_OPTS) #-d int
 QEMU_DEBUG_OPTS = -s -S
 
 $(OUTPUT): $(KERNEL_OBJS) $(LIBK_OBJ)
