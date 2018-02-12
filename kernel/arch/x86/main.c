@@ -39,7 +39,7 @@ void arch_init(void) {
 	gdt_init();
 	vmm_init();
 	idt_init();
-	kb_init();
+//	kb_init();
 	char buf[20];
 	cpuid_vendor_string(buf);
 	kprint("CPU vendor: %s\n", buf);

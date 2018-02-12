@@ -56,6 +56,9 @@ _multiboot_magic_value:
 .global _start
 .type _start, @function
 _start:
+	# Disable interrupts
+	cli
+
 	# Stick the physical address of the first page table in the destination
 	# index register
 	movl $(_boot_pagetab1 - KERN_OFFSET), %edi

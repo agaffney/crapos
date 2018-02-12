@@ -20,6 +20,15 @@
 // Used to signal to PIC that the interrupt is being handled
 #define PIC_EOI_ACK 0x20
 
+#define PIC_IRQ0  ~(1 << 0)
+#define PIC_IRQ1  ~(1 << 1)
+#define PIC_IRQ2  ~(1 << 2)
+#define PIC_IRQ3  ~(1 << 3)
+#define PIC_IRQ4  ~(1 << 4)
+#define PIC_IRQ5  ~(1 << 5)
+#define PIC_IRQ6  ~(1 << 6)
+#define PIC_IRQ7  ~(1 << 7)
+
 #define IDT_SIZE 256
 #define IDT_BASE 0x00000000
 
@@ -58,6 +67,18 @@ struct idtr {
 extern void keyboard_handler(void);
 extern void _default_int_handler(void);
 extern void _asm_int_0(void);
+extern void _asm_int_1(void);
+extern void _asm_int_2(void);
+extern void _asm_int_3(void);
+extern void _asm_int_4(void);
+extern void _asm_int_32(void);
+extern void _asm_int_33(void);
+extern void _asm_int_34(void);
+extern void _asm_int_35(void);
+extern void _asm_int_36(void);
+extern void _asm_int_37(void);
+extern void _asm_int_38(void);
+extern void _asm_int_39(void);
 
 void idt_init(void);
 

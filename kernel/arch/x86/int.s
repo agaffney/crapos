@@ -38,8 +38,8 @@ _asm_int_\num:
 	# Remove what we'd previously pushed onto the stack for consistency
 	popl %eax
 	# Notify PIC that we've handled the interrupt
-	movb $0x20, %al
-	outb %al, $0x20
+#	movb $0x20, %al
+#	outb %al, $0x20
 	RESTORE_REGS
 	iret
 .endm

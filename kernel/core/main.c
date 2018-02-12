@@ -24,7 +24,7 @@ void kmain(void)
 	video_clear();
 	kprint("\n\nWelcome to CrapOS!\n\n\n");
 
-//	register_keyboard_event_handler(test_keyboard_event_handler);
+	register_keyboard_event_handler(test_keyboard_event_handler);
 
 /*
 	// Test interrupt handler with divide by zero
@@ -51,7 +51,9 @@ void test_keyboard_event_handler(int key, int state) {
 		kprint(" (released)");
 	}
 	kprint("\n");
+/*
 	if(key == 'c') {
 		video_clear();
 	}
+*/
 }
