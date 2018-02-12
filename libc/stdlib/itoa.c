@@ -23,16 +23,9 @@ void itoa(int input, char *output, int base) {
 	if (input == 0) {
 		buf[idx++] = '0';
 	}
-	// Pad out a binary number to 8 bytes
-	if(base == 2) {
-		for(i = (idx - 2) % 8; i > 0; i--) {
-			buf[idx++] = '0';
-		}
-	}
 	if(is_negative) {
 		buf[idx++] = '-';
 	}
-
 	for(i = 0; i < idx; i++) {
 		output[i] = buf[idx - i - 1];
 	}
