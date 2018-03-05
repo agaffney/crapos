@@ -62,26 +62,6 @@ struct idtr {
 	uint16_t limit;
 	uint32_t base;
 } __attribute__ ((packed));
-
-// Defined via ASM
-extern void keyboard_handler(void);
-extern void _default_int_handler(void);
-extern void _asm_int_0(void);
-extern void _asm_int_1(void);
-extern void _asm_int_2(void);
-extern void _asm_int_3(void);
-extern void _asm_int_4(void);
-extern void _asm_int_32(void);
-extern void _asm_int_33(void);
-extern void _asm_int_34(void);
-extern void _asm_int_35(void);
-extern void _asm_int_36(void);
-extern void _asm_int_37(void);
-extern void _asm_int_38(void);
-extern void _asm_int_39(void);
-
 void idt_init(void);
 
 void idt_init_desc(uint8_t idx, void * handler_func, uint16_t selector, uint8_t type, uint8_t attr);
-
-void default_int_handler(uint32_t);

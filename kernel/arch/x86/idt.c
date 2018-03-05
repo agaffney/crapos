@@ -1,5 +1,7 @@
 #include <arch/x86/io.h>
 #include <arch/x86/idt.h>
+#include <arch/x86/int.h>
+#include <arch/x86/timer.h>
 #include <core/kprint.h>
 #include <libk/string.h>
 
@@ -29,6 +31,8 @@ void idt_init(void) {
 	idt_init_desc(PIC1_OFFSET_ADDR + 5, _asm_int_37, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(PIC1_OFFSET_ADDR + 6, _asm_int_38, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(PIC1_OFFSET_ADDR + 7, _asm_int_39, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
+
+	idt_init_desc(INT_SYSCALL, _asm_int_128, GDT_INDEX_KCODE, IDT_TYPE_TRAP_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 
 	/* ICW1 - begin initialization */
 	outb(PIC1_COMMAND_ADDR, 0x11);
@@ -74,16 +78,4 @@ void idt_init(void) {
 	outb(PIC1_DATA_ADDR, PIC_IRQ1 & PIC_IRQ2 & PIC_IRQ3 & PIC_IRQ4 & PIC_IRQ7);
 	foo = inb(PIC1_DATA_ADDR);
 	kdebug("new interrupt mask = %08b\n", foo);
-}
-
-void default_int_handler(uint32_t code) {
-	kdebug("received interrupt: %d\n", code);
-	if(code >= PIC2_OFFSET_ADDR) {
-		kdebug("IRQ %d\n", code - PIC2_OFFSET_ADDR + 8);
-		/* write EOI */
-		outb(PIC2_COMMAND_ADDR, PIC_EOI_ACK);
-	} else if(code >= PIC1_OFFSET_ADDR) {
-		kdebug("IRQ %d\n", code - PIC1_OFFSET_ADDR);
-		outb(PIC1_COMMAND_ADDR, PIC_EOI_ACK);
-	}
 }
