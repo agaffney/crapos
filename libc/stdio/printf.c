@@ -28,7 +28,7 @@ int vsprintf(char *out, const char* restrict format, va_list parameters) {
 				written++;
 				continue;
 			}
-			int alt_form = 0, left_just = 0, prepend_sign = 0;
+			int alt_form = 0; //, left_just = 0, prepend_sign = 0;
 			char pad_char = '\0';
 			int field_width = 0;
 			// Look for flags
@@ -44,12 +44,14 @@ int vsprintf(char *out, const char* restrict format, va_list parameters) {
 					case '#':
 						alt_form = 1;
 						break;
+/*
 					case '-':
 						left_just = 1;
 						break;
 					case '+':
 						prepend_sign = 1;
 						break;
+*/
 					default:
 						break_out = 1;
 						break;
