@@ -4,6 +4,7 @@
 #include <core/video.h>
 #include <core/vfs.h>
 #include <core/cmdline.h>
+#include <core/process.h>
 #include <libk/stdlib.h>
 #include <libk/stdio.h>
 
@@ -18,6 +19,7 @@ void kmain(void)
 	kprint(KERNEL_NAME " kernel version " KERNEL_VERSION "\n");
 	cmdline_parse();
 	arch_init();
+	process_init();
 	vfs_init();
 	video_init();
 
