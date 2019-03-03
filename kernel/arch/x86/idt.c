@@ -17,13 +17,15 @@ void idt_init_desc(uint8_t idx, void * handler_func, uint16_t selector, uint8_t 
 }
 
 void idt_init(void) {
+	// CPU interrupts
 	idt_init_desc(0, _asm_int_0, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(1, _asm_int_1, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(2, _asm_int_2, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(3, _asm_int_3, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(4, _asm_int_4, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 
-	idt_init_desc(PIC1_OFFSET_ADDR, _asm_int_32, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
+	// IRQ 0-7
+	idt_init_desc(PIC1_OFFSET_ADDR, _asm_int_pit, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(PIC1_OFFSET_ADDR + 1, keyboard_handler, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(PIC1_OFFSET_ADDR + 2, _asm_int_34, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(PIC1_OFFSET_ADDR + 3, _asm_int_35, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
@@ -32,6 +34,7 @@ void idt_init(void) {
 	idt_init_desc(PIC1_OFFSET_ADDR + 6, _asm_int_38, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 	idt_init_desc(PIC1_OFFSET_ADDR + 7, _asm_int_39, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 
+	// Syscall
 	idt_init_desc(INT_SYSCALL, _asm_int_128, GDT_INDEX_KCODE, IDT_TYPE_TRAP_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 
 	/* ICW1 - begin initialization */

@@ -38,12 +38,13 @@ _asm_int_\num:
 	# Remove what we'd previously pushed onto the stack for consistency
 	popl %eax
 	# Notify PIC that we've handled the interrupt
-#	movb $0x20, %al
-#	outb %al, $0x20
+	movb $0x20, %al
+	outb %al, $0x20
 	RESTORE_REGS
 	iret
 .endm
 
+# x86 CPU interrupts
 INTERRUPT 0
 INTERRUPT 1
 INTERRUPT 2
@@ -76,6 +77,8 @@ INTERRUPT 28
 INTERRUPT 29
 INTERRUPT 30
 INTERRUPT 31
+
+# IRQ 0-15
 #INTERRUPT 32
 INTERRUPT 33
 INTERRUPT 34
@@ -92,7 +95,7 @@ INTERRUPT 44
 INTERRUPT 45
 INTERRUPT 46
 INTERRUPT 47
-INTERRUPT 48
-INTERRUPT 49
+
+# Syscall
 INTERRUPT 128
 
