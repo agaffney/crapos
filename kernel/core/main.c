@@ -34,6 +34,14 @@ void kmain(void)
 	kdebug("%d\n", foo);
 */
 
+/*
+	// Test syscall handler
+	asm("mov $3, %eax\n\t"
+	    "int $0x80");
+
+	kdebug("called syscall 3\n");
+*/
+
 	while(1);
 }
 
