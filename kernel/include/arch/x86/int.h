@@ -20,6 +20,5 @@ extern void _asm_int_36(void);
 extern void _asm_int_37(void);
 extern void _asm_int_38(void);
 extern void _asm_int_39(void);
-extern void _asm_int_128(void);
 
-void default_int_handler(uint32_t);
+void _int_handler_default(uint32_t);

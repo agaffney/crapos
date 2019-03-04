@@ -1,6 +1,7 @@
 #include <arch/x86/io.h>
 #include <arch/x86/idt.h>
 #include <arch/x86/int.h>
+#include <arch/x86/syscall.h>
 #include <arch/x86/timer.h>
 #include <core/kprint.h>
 #include <libk/string.h>
@@ -35,7 +36,7 @@ void idt_init(void) {
 	idt_init_desc(PIC1_OFFSET_ADDR + 7, _asm_int_39, GDT_INDEX_KCODE, IDT_TYPE_INT_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 
 	// Syscall
-	idt_init_desc(INT_SYSCALL, _asm_int_128, GDT_INDEX_KCODE, IDT_TYPE_TRAP_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
+	idt_init_desc(INT_SYSCALL, _asm_int_syscall, GDT_INDEX_KCODE, IDT_TYPE_TRAP_GATE, IDT_ATTR_PRESENT | IDT_ATTR_PRIV_0);
 
 	/* ICW1 - begin initialization */
 	outb(PIC1_COMMAND_ADDR, 0x11);

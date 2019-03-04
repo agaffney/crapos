@@ -34,10 +34,24 @@ _asm_int_\num:
 	SAVE_REGS
 	# Push interrupt number onto the stack
 	pushl $\num
-	call default_int_handler
+	call _int_handler_default
 	# Remove what we'd previously pushed onto the stack for consistency
 	popl %eax
-	# Notify PIC that we've handled the interrupt
+	RESTORE_REGS
+	iret
+.endm
+
+# Generic PIC interrupt handler macro
+.macro INTERRUPT_PIC1 num
+.global _asm_int_\num
+_asm_int_\num:
+	SAVE_REGS
+	# Push interrupt number onto the stack
+	pushl $\num
+	call _int_handler_default
+	# Remove what we'd previously pushed onto the stack for consistency
+	popl %eax
+	# Notify PIC1 that we've handled the interrupt
 	movb $0x20, %al
 	outb %al, $0x20
 	RESTORE_REGS
@@ -79,22 +93,22 @@ INTERRUPT 30
 INTERRUPT 31
 
 # IRQ 0-15
-#INTERRUPT 32
-INTERRUPT 33
-INTERRUPT 34
-INTERRUPT 35
-INTERRUPT 36
-INTERRUPT 37
-INTERRUPT 38
-INTERRUPT 39
-INTERRUPT 40
-INTERRUPT 41
-INTERRUPT 42
-INTERRUPT 43
-INTERRUPT 44
-INTERRUPT 45
-INTERRUPT 46
-INTERRUPT 47
+#INTERRUPT_PIC1 32
+INTERRUPT_PIC1 33
+INTERRUPT_PIC1 34
+INTERRUPT_PIC1 35
+INTERRUPT_PIC1 36
+INTERRUPT_PIC1 37
+INTERRUPT_PIC1 38
+INTERRUPT_PIC1 39
+#INTERRUPT_PIC 40
+#INTERRUPT_PIC 41
+#INTERRUPT_PIC 42
+#INTERRUPT_PIC 43
+#INTERRUPT_PIC 44
+#INTERRUPT_PIC 45
+#INTERRUPT_PIC 46
+#INTERRUPT_PIC 47
 
 # Syscall
 INTERRUPT 128

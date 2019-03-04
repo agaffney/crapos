@@ -3,7 +3,7 @@
 #include <arch/x86/io.h>
 #include <core/kprint.h>
 
-void default_int_handler(uint32_t code) {
+void _int_handler_default(uint32_t code) {
 	kdebug("received interrupt: %d\n", code);
 	if(code >= PIC2_OFFSET_ADDR) {
 		kdebug("IRQ %d\n", code - PIC2_OFFSET_ADDR + 8);
