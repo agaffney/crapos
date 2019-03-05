@@ -19,8 +19,9 @@ void gdt_init_desc(uint8_t idx, uint32_t base, uint32_t limit, uint8_t access, u
 void gdt_init() {
 	default_tss.debug_flag = 0x00;
 	default_tss.io_map = 0x00;
+	// TODO: replace with kernel stack pointer
 	default_tss.esp0 = 0x1FFF0;
-	default_tss.ss0 = 0x18;
+	default_tss.ss0 = sizeof(struct gdtdesc) * (GDT_INDEX_KDATA + 1);
 
 	// null descriptor
 	gdt_init_desc(GDT_INDEX_NULL, 0x0, 0x0, 0x0, 0x0);
