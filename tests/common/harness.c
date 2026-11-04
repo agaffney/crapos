@@ -17,6 +17,7 @@
  * exit (signal, sanitizer's exit status, timeout) is reported as a crash.
  */
 #define TEST_EXIT_ASSERT 42
+#define TEST_EXIT_SKIP 43
 #define DEFAULT_TIMEOUT_SECONDS 10
 
 struct test {
@@ -28,6 +29,7 @@ struct test {
 
 enum outcome {
 	OUTCOME_PASS,
+	OUTCOME_SKIP,   /* the test skipped itself */
 	OUTCOME_FAIL,   /* an assertion failed */
 	OUTCOME_CRASH,  /* signal, sanitizer abort, timeout, ... */
 };
@@ -37,6 +39,7 @@ static struct test *first_test, *last_test;
 static int in_child;            /* running inside a forked child */
 static jmp_buf current_jmp;     /* --no-fork only */
 static int current_failed;      /* --no-fork only */
+static int current_skipped;     /* --no-fork only */
 
 void test_register(const char *name, test_fn fn, int expected_failure)
 {
@@ -69,6 +72,18 @@ static void fail(const char *file, int line, const char *fmt, ...)
 		_exit(TEST_EXIT_ASSERT);
 	}
 	current_failed = 1;
+	longjmp(current_jmp, 1);
+}
+
+/* Abandon the current test without counting it as a pass or a failure. */
+void test_skip(const char *file, int line, const char *reason)
+{
+	printf("    %s:%d: skipped: %s\n", file, line, reason);
+	if (in_child) {
+		fflush(stdout);
+		_exit(TEST_EXIT_SKIP);
+	}
+	current_skipped = 1;
 	longjmp(current_jmp, 1);
 }
 
@@ -150,6 +165,9 @@ static enum outcome run_forked(const struct test *t, char *detail, size_t detail
 		if (code == TEST_EXIT_ASSERT) {
 			return OUTCOME_FAIL;
 		}
+		if (code == TEST_EXIT_SKIP) {
+			return OUTCOME_SKIP;
+		}
 		snprintf(detail, detail_len, "exited with status %d (sanitizer error?)", code);
 		return OUTCOME_CRASH;
 	}
@@ -170,8 +188,12 @@ static enum outcome run_forked(const struct test *t, char *detail, size_t detail
 static enum outcome run_inline(const struct test *t)
 {
 	current_failed = 0;
+	current_skipped = 0;
 	if (setjmp(current_jmp) == 0) {
 		t->fn();
+	}
+	if (current_skipped) {
+		return OUTCOME_SKIP;
 	}
 	return current_failed ? OUTCOME_FAIL : OUTCOME_PASS;
 }
@@ -206,7 +228,7 @@ static int matches(const struct test *t, int npatterns, char **patterns)
 
 int main(int argc, char **argv)
 {
-	int passed = 0, failed = 0, xfailed = 0, xpassed = 0;
+	int passed = 0, failed = 0, xfailed = 0, xpassed = 0, skipped = 0;
 	int list_only = 0, use_fork = 1;
 	int npatterns = 0;
 	char **patterns = argv + 1;
@@ -247,7 +269,10 @@ int main(int argc, char **argv)
 
 		outcome = use_fork ? run_forked(t, detail, sizeof(detail)) : run_inline(t);
 
-		if (outcome == OUTCOME_PASS) {
+		if (outcome == OUTCOME_SKIP) {
+			printf("SKIP  %s\n", t->name);
+			skipped++;
+		} else if (outcome == OUTCOME_PASS) {
 			if (t->expected_failure) {
 				printf("XPASS %s (expected to fail; change it to TEST())\n", t->name);
 				xpassed++;
@@ -274,10 +299,10 @@ int main(int argc, char **argv)
 	if (list_only) {
 		return 0;
 	}
-	if (npatterns > 0 && passed + failed + xfailed + xpassed == 0) {
+	if (npatterns > 0 && passed + failed + xfailed + xpassed + skipped == 0) {
 		printf("no tests matched the given pattern(s)\n");
 	}
-	printf("\n%d passed, %d failed, %d expected failures, %d unexpected passes\n",
-		passed, failed, xfailed, xpassed);
+	printf("\n%d passed, %d failed, %d expected failures, %d unexpected passes, %d skipped\n",
+		passed, failed, xfailed, xpassed, skipped);
 	return (failed || xpassed) ? 1 : 0;
 }

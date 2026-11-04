@@ -28,8 +28,10 @@ ifeq ($(SAN),1)
 # -fno-sanitize-recover makes undefined behavior abort the test instead of
 # only printing a message while the test carries on and passes.
 SAN_FLAGS := -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
+SAN_DEFINE := -DTEST_SANITIZERS=1
 else
 SAN_FLAGS :=
+SAN_DEFINE := -DTEST_SANITIZERS=0
 endif
 
 # Code under test and the tests themselves: same style of environment as the
@@ -37,7 +39,7 @@ endif
 LIB_CFLAGS := -std=gnu11 -g -O0 -Wall $(SAN_FLAGS) \
 	-ffreestanding -nostdinc -isystem $(FREESTANDING_INC) \
 	-I $(LIBC_DIR)/include -I $(KERNEL_INC) -I $(COMMON) \
-	-include $(COMMON)/rename.h -D__is_libk
+	-include $(COMMON)/rename.h -D__is_libk $(SAN_DEFINE)
 
 # Harness: ordinary hosted program, no renaming.
 HOST_CFLAGS := -std=gnu11 -g -O0 -Wall $(SAN_FLAGS) -I $(COMMON)
