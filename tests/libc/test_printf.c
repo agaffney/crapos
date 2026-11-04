@@ -163,15 +163,40 @@ TEST(sprintf_percent_percent_at_end)
 }
 
 /*
- * Known bug: after emitting '%' for "%%", vsprintf doesn't advance past the
- * second '%', so it is parsed as the start of another conversion. Here "%%d"
- * consumes the argument as an int and prints "%7" instead of "%d".
+ * "%%" is a literal '%' even when a conversion character follows: "%%d" is
+ * the text "%d" and must not consume an argument.
  */
-XFAIL_TEST(sprintf_percent_percent_before_conversion_char)
+TEST(sprintf_percent_percent_before_conversion_char)
 {
 	char buf[50];
 	sprintf(buf, "%%d", 7);
 	ASSERT_EQ_STR(buf, "%d");
+}
+
+/* Consecutive "%%" pairs each produce one '%'. */
+TEST(sprintf_percent_percent_repeated)
+{
+	char buf[50];
+	int n = sprintf(buf, "%%%%");
+	ASSERT_EQ_STR(buf, "%%");
+	ASSERT_EQ_INT(n, 2);
+}
+
+/* "%%" followed by a real conversion: the escape doesn't swallow the argument. */
+TEST(sprintf_percent_percent_then_conversion)
+{
+	char buf[50];
+	sprintf(buf, "%%%d", 7);
+	ASSERT_EQ_STR(buf, "%7");
+}
+
+/* A format that is just "%%" yields a single '%'. */
+TEST(sprintf_percent_percent_alone)
+{
+	char buf[50];
+	int n = sprintf(buf, "%%");
+	ASSERT_EQ_STR(buf, "%");
+	ASSERT_EQ_INT(n, 1);
 }
 
 /*
