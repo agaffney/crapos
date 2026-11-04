@@ -25,7 +25,7 @@ enum video_colors {
 	VIDEO_COLOR_WHITE
 };
 
-void x86_video_init();
+void x86_video_init(void);
 
 void clear_screen(void);
 

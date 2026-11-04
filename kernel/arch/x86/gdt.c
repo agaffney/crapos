@@ -16,7 +16,7 @@ void gdt_init_desc(uint8_t idx, uint32_t base, uint32_t limit, uint8_t access, u
 	kgdt[idx].base24_31 = (base & 0xff000000) >> 24;
 }
 
-void gdt_init() {
+void gdt_init(void) {
 	default_tss.debug_flag = 0x00;
 	default_tss.io_map = 0x00;
 	// TODO: replace with kernel stack pointer

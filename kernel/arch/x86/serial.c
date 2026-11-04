@@ -7,7 +7,7 @@
 // Pre-allocate to allow usage before VMM subsystem is initialized
 FILE serial_com1;
 
-void init_serial() {
+void init_serial(void) {
 	outb(SERIAL_COM1_ADDR + 1, 0x00);    // Disable all interrupts
 	outb(SERIAL_COM1_ADDR + 3, 0x80);    // Enable DLAB (set baud rate divisor)
 	outb(SERIAL_COM1_ADDR + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
@@ -21,7 +21,7 @@ void init_serial() {
 	console_set(&serial_com1);
 }
 
-int is_transmit_empty() {
+int is_transmit_empty(void) {
    return inb(SERIAL_COM1_ADDR + 5) & 0x20;
 }
  

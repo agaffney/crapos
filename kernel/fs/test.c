@@ -17,7 +17,7 @@ vfs_mount * fs_test_mount(vfs_mount_args * args) {
 	return mount;
 }
 
-void fs_test_register() {
+void fs_test_register(void) {
 	vfs_filesystem * fs = (vfs_filesystem *)kmalloc(sizeof(vfs_filesystem), KMALLOC_ZERO);
 	strcpy(fs->name, "test");
 	fs->mount_func = fs_test_mount;

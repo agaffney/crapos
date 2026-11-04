@@ -35,7 +35,7 @@ struct _vfs_filesystem {
 };
 typedef struct _vfs_filesystem vfs_filesystem;
 
-void vfs_init();
+void vfs_init(void);
 void vfs_add_filesystem(vfs_filesystem * fs);
 
 enum vfs_file_types {

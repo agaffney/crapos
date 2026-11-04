@@ -4,7 +4,7 @@
 vfs_filesystem * VFS_FILESYSTEMS[VFS_MAX_FILESYSTEMS];
 int vfs_filesystems_idx;
 
-void vfs_init() {
+void vfs_init(void) {
 	size_t vfs_register_func_count = (_register_func_vfs_end - _register_func_vfs_start);
 	int i;
 	for (i = 0; i < vfs_register_func_count; ++i) {

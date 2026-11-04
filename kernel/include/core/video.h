@@ -5,9 +5,9 @@ struct video_driver {
 	void (*clear_func)(void);
 };
 
-void video_init();
+void video_init(void);
 void register_video_driver(struct video_driver *);
-void video_clear();
+void video_clear(void);
 void video_set_pos(short, short);
 void video_putch(char);
 

@@ -9,4 +9,4 @@ typedef struct {
 	t_pid pid;
 } PROCESS;
 
-void process_init();
+void process_init(void);

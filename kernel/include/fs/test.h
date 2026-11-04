@@ -3,7 +3,7 @@
 #include <core/vfs.h>
 #include <libk/data/linked_list.h>
 
-void fs_test_register();
+void fs_test_register(void);
 
 typedef struct {
 	Linked_List * files;

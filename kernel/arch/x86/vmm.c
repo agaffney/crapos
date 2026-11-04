@@ -14,7 +14,7 @@ Linked_List * FREE_PAGE_TABLES;
 
 // TODO: rewrite initial page tables to only cover first 1MB (identity mapped)
 // and kernel mapped at 3GB + 1MB
-void vmm_init() {
+void vmm_init(void) {
 	int i;
 	// Reuse initial page directory from boot.s to conserve memory
 	PAGE_DIR = (x86_page_dir *)&_boot_pagedir;
@@ -50,17 +50,17 @@ void vmm_init() {
 
 }
 
-void reload_page_dir() {
+void reload_page_dir(void) {
 	// Put the physical address of the page directory into the CR3 register
 	uint32_t val = (uint32_t)PAGE_DIR - KERN_OFFSET;
 	asm volatile ("movl %0, %%cr3" :: "r"(val));
 }
 
-void * arch_vmm_get_heap_start() {
+void * arch_vmm_get_heap_start(void) {
 	return &_bootstrap_heap_start;
 }
 
-void * arch_vmm_next_phys_page() {
+void * arch_vmm_next_phys_page(void) {
 	void * new_page = NEXT_PHYS_PAGE;
 	NEXT_PHYS_PAGE += ARCH_PAGE_SIZE;
 	return new_page;

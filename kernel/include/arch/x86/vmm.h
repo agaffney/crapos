@@ -42,8 +42,8 @@ typedef struct {
 	uint32_t page_tables[1024];
 } x86_page_dir;
 
-void vmm_init();
-void reload_page_dir();
+void vmm_init(void);
+void reload_page_dir(void);
 void * map_page();
 void * get_next_phys_page();
 uint16_t get_page_dir_index(void * addr);

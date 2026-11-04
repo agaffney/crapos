@@ -5,7 +5,7 @@ struct video_driver *VIDEO_DRIVER;
 int video_current_row, video_current_col;
 int video_rows, video_cols;
 
-void video_init() {
+void video_init(void) {
 	video_rows = VIDEO_DRIVER->rows;
 	video_cols = VIDEO_DRIVER->cols;
 	video_set_pos(1, 1);
@@ -29,7 +29,7 @@ void video_putch(char c) {
 	}
 }
 
-void video_clear() {
+void video_clear(void) {
 	VIDEO_DRIVER->clear_func();
 	video_set_pos(1, 1);
 }
