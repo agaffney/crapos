@@ -118,6 +118,16 @@ TEST(sprintf_hex_high_bit_set)
 	ASSERT_EQ_STR(buf, "ffffffff");
 }
 
+/* %X also prints values with the top bit set as unsigned, in uppercase. */
+TEST(sprintf_hex_upper_high_bit_set)
+{
+	char buf[50];
+	sprintf(buf, "%X", 0xdeadbeefu);
+	ASSERT_EQ_STR(buf, "DEADBEEF");
+	sprintf(buf, "%X", 0xffffffffu);
+	ASSERT_EQ_STR(buf, "FFFFFFFF");
+}
+
 /* The '0' flag with a width zero-pads hex output on the left. */
 TEST(sprintf_hex_zero_padded)
 {
@@ -199,15 +209,38 @@ TEST(sprintf_percent_percent_alone)
 	ASSERT_EQ_INT(n, 1);
 }
 
-/*
- * Known bug: %u is formatted with itoa(), which treats a negative int in
- * base 10 as signed, so values above INT_MAX print with a minus sign.
- */
-XFAIL_TEST(sprintf_unsigned_above_int_max)
+/* %u prints values above INT_MAX as large positive numbers, not negative ones. */
+TEST(sprintf_unsigned_above_int_max)
 {
 	char buf[50];
 	sprintf(buf, "%u", 4000000000u);
 	ASSERT_EQ_STR(buf, "4000000000");
+}
+
+/* %u prints the largest unsigned int in full. */
+TEST(sprintf_unsigned_max)
+{
+	char buf[50];
+	sprintf(buf, "%u", 4294967295u);
+	ASSERT_EQ_STR(buf, "4294967295");
+}
+
+/* %d prints the extreme int values, including INT_MIN, which has no positive form. */
+TEST(sprintf_int_extremes)
+{
+	char buf[50];
+	sprintf(buf, "%d", 2147483647);
+	ASSERT_EQ_STR(buf, "2147483647");
+	sprintf(buf, "%d", -2147483647 - 1);
+	ASSERT_EQ_STR(buf, "-2147483648");
+}
+
+/* %b prints all 32 bits of a value with the top bit set. */
+TEST(sprintf_binary_full_width)
+{
+	char buf[50];
+	sprintf(buf, "%b", 0x80000000u);
+	ASSERT_EQ_STR(buf, "10000000000000000000000000000000");
 }
 
 /* Known bug: %d ignores the field width, so no padding is added. */

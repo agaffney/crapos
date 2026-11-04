@@ -35,17 +35,12 @@ TEST(itoa_int_max)
 }
 
 /*
- * Known bug: itoa() negates the input as a signed int (num = -input), which
- * is undefined behavior for INT_MIN. With sanitizers on, UBSan aborts the
- * test. Without them the wraparound happens to give the right answer, so
- * the test would report XPASS; it skips itself instead (make SAN=0).
+ * The most negative int has no positive counterpart, so itoa() must not
+ * negate it as a signed value (undefined behavior, caught by UBSan).
  */
-XFAIL_TEST(itoa_int_min)
+TEST(itoa_int_min)
 {
 	char buf[50];
-	if (!TEST_SANITIZERS) {
-		SKIP_TEST("the bug (signed overflow) is only detectable with sanitizers");
-	}
 	itoa(-2147483647 - 1, buf, 10);
 	ASSERT_EQ_STR(buf, "-2147483648");
 }

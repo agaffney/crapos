@@ -9,7 +9,8 @@ void itoa(int input, char *output, int base) {
 
 	if(input < 0 && base == 10) {
 		is_negative = 1;
-		num = -input;
+		// Negate as unsigned: -input overflows (undefined behavior) for INT_MIN
+		num = 0u - (unsigned int)input;
 	} else {
 		num = (unsigned int)input;
 	}
