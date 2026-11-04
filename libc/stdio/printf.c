@@ -25,6 +25,9 @@ int vsprintf(char *out, const char* restrict format, va_list parameters) {
 			if (format[0] == '%') {
 				out[written] = format[0];
 				written++;
+				// Consume the second '%' so it isn't parsed as the start
+				// of another conversion
+				format++;
 				continue;
 			}
 			int alt_form = 0; //, left_just = 0, prepend_sign = 0;
