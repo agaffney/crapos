@@ -2,3 +2,4 @@
 *.a
 kernel/kernel
 kernel/kernel.sym
+tests/*/build/

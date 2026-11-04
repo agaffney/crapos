@@ -20,6 +20,15 @@ libc:
 libc-%:
 	$(MAKE) -C libc $(subst libc-,,$@)
 
+# Host-side unit tests
+.PHONY: test test-%
+
+test:
+	$(MAKE) -C tests
+
+test-%:
+	$(MAKE) -C tests $(subst test-,,$@)
+
 # Top-level 'clean' target
 .PHONY: clean
 
