@@ -28,6 +28,7 @@ LIBC_INCLUDE_DIR := $(BASEDIR)/libc/include
 include $(KERNEL_ARCHDIR)/config.mk
 
 KERNEL_CFLAGS := $(CFLAGS) -fno-stack-protector -ffreestanding -I $(KERNEL_INCLUDE_DIR) $(KERNEL_ARCH_CFLAGS)
-# This is a hack to allow the use of the default gcc in the short term
-KERNEL_CFLAGS += -D_FEATURES_H
+# Ignore host headers, but include compiler headers
+# This allows us to use the host gcc rather than a dedicated (cross-)arch toolchain
+KERNEL_CFLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include)
 LIBC_CFLAGS := $(CFLAGS) -I $(LIBC_INCLUDE_DIR)
