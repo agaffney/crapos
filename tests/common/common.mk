@@ -7,8 +7,10 @@
 # Every suite builds the libc sources (with renamed symbols, see rename.h) into
 # its own archive, so suites don't depend on each other's build output.
 #
-#   make          build and run the suite
-#   make SAN=0    without AddressSanitizer/UBSan
+#   make                     build and run the suite
+#   make SAN=0               without AddressSanitizer/UBSan
+#   make ARGS='--list'       pass arguments to the test runner (see --help);
+#   make ARGS='itoa'         e.g. run only tests with "itoa" in their name
 
 CC := cc
 SAN ?= 1
@@ -23,7 +25,9 @@ KERNEL_INC := $(ROOT)/kernel/include
 FREESTANDING_INC := $(shell $(CC) -print-file-name=include)
 
 ifeq ($(SAN),1)
-SAN_FLAGS := -fsanitize=address,undefined -fno-omit-frame-pointer
+# -fno-sanitize-recover makes undefined behavior abort the test instead of
+# only printing a message while the test carries on and passes.
+SAN_FLAGS := -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
 else
 SAN_FLAGS :=
 endif
@@ -50,8 +54,10 @@ UNIT_OBJS := $(patsubst $(ROOT)/%.c,$(BUILD)/unit/%.o,$(UNIT_SRCS))
 RUNNER := $(BUILD)/run-tests
 
 .PHONY: all test clean
+ARGS ?=
+
 all test: $(RUNNER)
-	./$(RUNNER)
+	./$(RUNNER) $(ARGS)
 
 # Test and unit objects are linked directly (tests self-register through
 # constructors, which an archive would drop); libc comes from the archive.
