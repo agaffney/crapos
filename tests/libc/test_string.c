@@ -120,3 +120,126 @@ TEST(memcpy_zero_length)
 	ASSERT_EQ_INT(dst[0], 1);
 	ASSERT_EQ_INT(dst[1], 1);
 }
+
+/* memset() fills exactly len bytes and leaves the bytes around them alone. */
+TEST(memset_fills_len_bytes)
+{
+	unsigned char buf[8];
+	size_t i;
+	fill(buf, 'x', sizeof(buf));
+	memset(buf + 2, 'a', 4);
+	for (i = 0; i < sizeof(buf); i++) {
+		ASSERT_EQ_INT(buf[i], (i >= 2 && i < 6) ? 'a' : 'x');
+	}
+}
+
+/* memset() returns its destination pointer. */
+TEST(memset_returns_dest)
+{
+	char buf[4];
+	ASSERT_TRUE(memset(buf, 0, sizeof(buf)) == buf);
+}
+
+/* A zero length writes nothing. */
+TEST(memset_zero_length)
+{
+	unsigned char buf[4];
+	fill(buf, 'x', sizeof(buf));
+	memset(buf, 'a', 0);
+	ASSERT_EQ_INT(buf[0], 'x');
+	ASSERT_EQ_INT(buf[3], 'x');
+}
+
+/* The fill value is converted to unsigned char, so only its low byte is used. */
+TEST(memset_fill_converted_to_unsigned_char)
+{
+	unsigned char buf[4];
+	memset(buf, 0x1ff, sizeof(buf));
+	ASSERT_EQ_INT(buf[0], 0xff);
+	ASSERT_EQ_INT(buf[3], 0xff);
+	memset(buf, -1, sizeof(buf));
+	ASSERT_EQ_INT(buf[1], 0xff);
+}
+
+/* memset() with zero clears a buffer, including bytes that were 0xff. */
+TEST(memset_zero_clears)
+{
+	unsigned char buf[4];
+	fill(buf, 0xff, sizeof(buf));
+	memset(buf, 0, sizeof(buf));
+	ASSERT_EQ_INT(buf[0] | buf[1] | buf[2] | buf[3], 0);
+}
+
+/* memcmp() returns 0 for equal buffers, and for a zero length. */
+TEST(memcmp_equal)
+{
+	ASSERT_EQ_INT(memcmp("abc", "abc", 3), 0);
+	ASSERT_EQ_INT(memcmp("abc", "xyz", 0), 0);
+}
+
+/* memcmp() is negative when the first differing byte is smaller in the first buffer. */
+TEST(memcmp_less)
+{
+	ASSERT_TRUE(memcmp("abc", "abd", 3) < 0);
+}
+
+/* memcmp() is positive when the first differing byte is larger in the first buffer. */
+TEST(memcmp_greater)
+{
+	ASSERT_TRUE(memcmp("abd", "abc", 3) > 0);
+}
+
+/* Only the first len bytes are compared. */
+TEST(memcmp_respects_len)
+{
+	ASSERT_EQ_INT(memcmp("abcX", "abcY", 3), 0);
+}
+
+/* The first difference decides the result, regardless of later bytes. */
+TEST(memcmp_first_difference_wins)
+{
+	ASSERT_TRUE(memcmp("ab9", "ac0", 3) < 0);
+}
+
+/* memcmp() does not stop at an embedded NUL, unlike strcmp(). */
+TEST(memcmp_embedded_nuls)
+{
+	ASSERT_EQ_INT(memcmp("a\0b", "a\0b", 3), 0);
+	ASSERT_TRUE(memcmp("a\0b", "a\0c", 3) < 0);
+}
+
+/* Bytes compare as unsigned: 0xff is greater than 0x01, not negative. */
+TEST(memcmp_compares_unsigned_bytes)
+{
+	unsigned char a[1] = { 0xff }, b[1] = { 0x01 };
+	ASSERT_TRUE(memcmp(a, b, 1) > 0);
+	ASSERT_TRUE(memcmp(b, a, 1) < 0);
+}
+
+/* memcmp() finds a difference in the last byte of a long run of equal bytes. */
+TEST(memcmp_difference_in_last_byte_of_long_run)
+{
+	unsigned char a[1024], b[1024];
+	fill(a, 0x5a, sizeof(a));
+	fill(b, 0x5a, sizeof(b));
+	ASSERT_EQ_INT(memcmp(a, b, sizeof(a)), 0);
+	b[sizeof(b) - 1] = 0x5b;
+	ASSERT_TRUE(memcmp(a, b, sizeof(a)) < 0);
+	ASSERT_TRUE(memcmp(b, a, sizeof(a)) > 0);
+	// The differing byte is outside the compared range when len is shorter
+	ASSERT_EQ_INT(memcmp(a, b, sizeof(a) - 1), 0);
+}
+
+/* memset() fills a long buffer completely without writing past either end. */
+TEST(memset_long_length)
+{
+	unsigned char buf[4096 + 2];
+	size_t i;
+	fill(buf, 'x', sizeof(buf));
+	memset(buf + 1, 'a', 4096);
+	ASSERT_EQ_INT(buf[0], 'x');
+	ASSERT_EQ_INT(buf[4097], 'x');
+	for (i = 1; i <= 4096; i++) {
+		ASSERT_EQ_INT(buf[i], 'a');
+	}
+}
