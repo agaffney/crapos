@@ -17,6 +17,9 @@
 #define PIC2_DATA_ADDR 0xA1
 #define PIC2_OFFSET_ADDR 0x28
 
+#define PIC_SLAVE_IRQ_MASK (1 << 2)
+#define PIC_SLAVE_IRQ_IDENTITY 0x02
+
 // Used to signal to PIC that the interrupt is being handled
 #define PIC_EOI_ACK 0x20
 

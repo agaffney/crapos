@@ -8,7 +8,9 @@ _clock_ticks:
 .global _asm_int_pit
 .type _asm_int_pit, @function
 _asm_int_pit:
+	push %eax
 	incl _clock_ticks
 	mov $0x20, %al
 	outb %al, $0x20
+	pop %eax
 	iret
