@@ -57,6 +57,7 @@ void ktest_run(void) {
 			continue;
 		}
 		current_failed = 0;
+		kprint("ktest: running test %s\n", test->name);
 		test->fn();
 		ran++;
 		if (current_failed) {

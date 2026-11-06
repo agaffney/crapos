@@ -12,11 +12,18 @@
 .macro SAVE_REGS
 	# Push general registers to stack
 	pushal
-	# Push segment registers to stack
+	# Push segment registers to stack. A segment push may write only the low 16
+	# bits of its 32-bit slot on some CPUs and leave stale stack contents in
+	# the upper half, so clear that half to keep the frame fields exact. This is
+	# four extra stores on every interrupt, which is cheap enough not to matter.
 	push %ds
+	movw $0, 2(%esp)
 	push %es
+	movw $0, 2(%esp)
 	push %fs
+	movw $0, 2(%esp)
 	push %gs
+	movw $0, 2(%esp)
 	# Load the kernel data segment selector into every data segment register
 	push %ebx
 	mov $0x10, %bx

@@ -1,16 +1,34 @@
 #include <arch/x86/regs.h>
 
-# Generic interrupt handler macro
-.macro INTERRUPT num
+# CPU exception handler macro
+.macro INTERRUPT_EXCEPTION num
 .global _asm_int_\num
 _asm_int_\num:
-	SAVE_REGS
+	# Push dummy error code to the stack
+	pushl $0x0
+	INTERRUPT_EXCEPTION_COMMON \num
+.endm
+
+# CPU exception handler with error macro
+.macro INTERRUPT_EXCEPTION_ERR num
+.global _asm_int_\num
+_asm_int_\num:
+	# The error code has already been pushed to the stack by the CPU
+	INTERRUPT_EXCEPTION_COMMON \num
+.endm
+
+.macro INTERRUPT_EXCEPTION_COMMON num
 	# Push interrupt number onto the stack
 	pushl $\num
-	call _int_handler_default
-	# Remove what we'd previously pushed onto the stack for consistency
-	popl %eax
+	SAVE_REGS
+	# Push pointer to top of stack
+	push %esp
+	call arch_x86_int_handler_default
+	# Move stack pointer past our handler arg
+	addl $4, %esp
 	RESTORE_REGS
+	# Move stack pointer past vector and error code
+	addl $8, %esp
 	iret
 .endm
 
@@ -18,16 +36,22 @@ _asm_int_\num:
 .macro INTERRUPT_PIC1 num
 .global _asm_int_\num
 _asm_int_\num:
-	SAVE_REGS
+	# Push dummy error code to the stack
+	pushl $0x0
 	# Push interrupt number onto the stack
 	pushl $\num
-	call _int_handler_default
-	# Remove what we'd previously pushed onto the stack for consistency
-	popl %eax
+	SAVE_REGS
+	# Push pointer to top of stack
+	push %esp
+	call arch_x86_int_handler_default
+	# Move stack pointer past our handler arg
+	addl $4, %esp
 	# Notify PIC1 that we've handled the interrupt
 	movb $0x20, %al
 	outb %al, $0x20
 	RESTORE_REGS
+	# Move stack pointer past vector and error code
+	addl $8, %esp
 	iret
 .endm
 
@@ -35,12 +59,16 @@ _asm_int_\num:
 .macro INTERRUPT_PIC2 num
 .global _asm_int_\num
 _asm_int_\num:
-	SAVE_REGS
+	# Push dummy error code to the stack
+	pushl $0x0
 	# Push interrupt number onto the stack
 	pushl $\num
-	call _int_handler_default
-	# Remove what we'd previously pushed onto the stack for consistency
-	popl %eax
+	SAVE_REGS
+	# Push pointer to top of stack
+	push %esp
+	call arch_x86_int_handler_default
+	# Move stack pointer past our handler arg
+	addl $4, %esp
 	# Notify PIC1/PIC2 that we've handled the interrupt
 	movb $0x20, %al
 	# Notify PIC2 (slave)
@@ -48,42 +76,44 @@ _asm_int_\num:
 	# Notify PIC1 (master)
 	outb %al, $0x20
 	RESTORE_REGS
+	# Move stack pointer past vector and error code
+	addl $8, %esp
 	iret
 .endm
 
 # x86 CPU interrupts
-INTERRUPT 0
-INTERRUPT 1
-INTERRUPT 2
-INTERRUPT 3
-INTERRUPT 4
-INTERRUPT 5
-INTERRUPT 6
-INTERRUPT 7
-INTERRUPT 8
-INTERRUPT 9
-INTERRUPT 10
-INTERRUPT 11
-INTERRUPT 12
-INTERRUPT 13
-INTERRUPT 14
-INTERRUPT 15
-INTERRUPT 16
-INTERRUPT 17
-INTERRUPT 18
-INTERRUPT 19
-INTERRUPT 20
-INTERRUPT 21
-INTERRUPT 22
-INTERRUPT 23
-INTERRUPT 24
-INTERRUPT 25
-INTERRUPT 26
-INTERRUPT 27
-INTERRUPT 28
-INTERRUPT 29
-INTERRUPT 30
-INTERRUPT 31
+INTERRUPT_EXCEPTION 0
+INTERRUPT_EXCEPTION 1
+INTERRUPT_EXCEPTION 2
+INTERRUPT_EXCEPTION 3
+INTERRUPT_EXCEPTION 4
+INTERRUPT_EXCEPTION 5
+INTERRUPT_EXCEPTION 6
+INTERRUPT_EXCEPTION 7
+INTERRUPT_EXCEPTION_ERR 8
+INTERRUPT_EXCEPTION 9
+INTERRUPT_EXCEPTION_ERR 10
+INTERRUPT_EXCEPTION_ERR 11
+INTERRUPT_EXCEPTION_ERR 12
+INTERRUPT_EXCEPTION_ERR 13
+INTERRUPT_EXCEPTION_ERR 14
+INTERRUPT_EXCEPTION 15
+INTERRUPT_EXCEPTION 16
+INTERRUPT_EXCEPTION_ERR 17
+INTERRUPT_EXCEPTION 18
+INTERRUPT_EXCEPTION 19
+INTERRUPT_EXCEPTION 20
+INTERRUPT_EXCEPTION_ERR 21
+INTERRUPT_EXCEPTION 22
+INTERRUPT_EXCEPTION 23
+INTERRUPT_EXCEPTION 24
+INTERRUPT_EXCEPTION 25
+INTERRUPT_EXCEPTION 26
+INTERRUPT_EXCEPTION 27
+INTERRUPT_EXCEPTION 28
+INTERRUPT_EXCEPTION_ERR 29
+INTERRUPT_EXCEPTION_ERR 30
+INTERRUPT_EXCEPTION 31
 
 # IRQ 0-15
 #INTERRUPT_PIC1 32
@@ -102,7 +132,3 @@ INTERRUPT_PIC2 44
 INTERRUPT_PIC2 45
 INTERRUPT_PIC2 46
 INTERRUPT_PIC2 47
-
-# Syscall
-INTERRUPT 128
-
