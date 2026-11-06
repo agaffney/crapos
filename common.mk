@@ -4,12 +4,11 @@
 # 1 - path to search in, defaults to current directory
 # 2 - suffix to add, defaults to '.o'
 define generate_obj_list
-	$(patsubst %, %$(or $(2),.o), $(shell find $(or $(1),.) -type f -a \( -name '*.c' -o -name '*.asm' -o -name '*.s' -o -name '*.S' \)))
+	$(patsubst %, %$(or $(2),.o), $(shell find $(or $(1),.) -type f -a \( -name '*.c' -o -name '*.s' -o -name '*.S' \)))
 endef
 
 CC ?= gcc
 LD ?= ld
-NASM ?= nasm
 OBJCOPY ?= objcopy
 STRIP ?= strip
 QEMU_SYSTEM ?= qemu-system-i386
