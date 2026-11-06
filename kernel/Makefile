@@ -46,11 +46,6 @@ $(LIBK_OBJ):
 %.s.o: %.s
 	$(CC) -c -o $@ $< $(KERNEL_CFLAGS)
 
-# Empty rule needed to override implicit "%: %.o" rule
-%.asm:
-%.asm.o: %.asm
-	$(NASM) $(NASM_FLAGS) $(KERNEL_ARCH_NASM_FLAGS) $< -o $@
-
 .PHONY: run run-debug
 
 run: $(OUTPUT)
