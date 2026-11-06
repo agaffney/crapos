@@ -27,6 +27,16 @@ SECTIONS
 		KEEP(*(SORT(.register_func.vfs.*)))
 		_register_func_vfs_end = .;
 	}
+	/*
+	 * In-kernel tests (only present in KTEST builds). Same arrangement as the
+	 * register functions above, sorted so tests run in a stable order.
+	 */
+	.ktests : AT (ADDR (.ktests) - 0xC0000000)
+	{
+		_ktests_start = .;
+		KEEP(*(SORT(.ktests.*)))
+		_ktests_end = .;
+	}
 	.data ALIGN (4K) : AT (ADDR (.data) - 0xC0000000)
 	{
 		*(.data)

@@ -5,11 +5,15 @@
 #include <core/vfs.h>
 #include <core/cmdline.h>
 #include <core/process.h>
+#include <ktest/ktest.h>
 #include <libk/stdlib.h>
 #include <libk/stdio.h>
 
 extern void arch_early_init(void);
 extern void arch_init(void);
+
+// ktest_run only exists in KTEST=1 builds; weak, so it is null otherwise
+#pragma weak ktest_run
 
 void test_keyboard_event_handler(int, int);
 
@@ -22,6 +26,14 @@ void kmain(void)
 	process_init();
 	vfs_init();
 	video_init();
+
+	if (cmdline_has_arg("ktest")) {
+		if (ktest_run) {
+			ktest_run();
+		} else {
+			kprint("ktest: this kernel was not built with KTEST=1\n");
+		}
+	}
 
 	video_clear();
 	kprint("\n\nWelcome to CrapOS!\n\n\n");

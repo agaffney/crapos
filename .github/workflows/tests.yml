@@ -22,6 +22,19 @@ jobs:
       - name: Run unit tests
         run: make test-kernel
 
+  unit-tests-kernel-qemu:
+    name: In-kernel tests (QEMU)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Install build and emulation tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends nasm gcc-multilib qemu-system-x86
+      - name: Run in-kernel tests
+        run: make kernel-test-qemu
+      - name: Check that failing assertions are reported
+        run: make kernel-test-qemu-selftest
+
   unit-tests-libc:
     name: Unit tests (libc)
     runs-on: ubuntu-latest
