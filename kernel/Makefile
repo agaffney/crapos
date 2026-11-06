@@ -46,6 +46,10 @@ $(LIBK_OBJ):
 %.s.o: %.s
 	$(CC) -c -o $@ $< $(KERNEL_CFLAGS)
 
+# .S files are run through the C preprocessor first, so they can #include headers
+%.S.o: %.S
+	$(CC) -c -o $@ $< $(KERNEL_CFLAGS)
+
 .PHONY: run run-debug
 
 run: $(OUTPUT)
