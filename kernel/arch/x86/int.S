@@ -23,7 +23,7 @@ _asm_int_\num:
 	SAVE_REGS
 	# Push pointer to top of stack
 	push %esp
-	call arch_x86_int_handler_default
+	call arch_x86_cpu_exception_handler_default
 	# Move stack pointer past our handler arg
 	addl $4, %esp
 	RESTORE_REGS
@@ -43,7 +43,7 @@ _asm_int_\num:
 	SAVE_REGS
 	# Push pointer to top of stack
 	push %esp
-	call arch_x86_int_handler_default
+	call arch_x86_irq_handler_default
 	# Move stack pointer past our handler arg
 	addl $4, %esp
 	# Notify PIC1 that we've handled the interrupt
@@ -66,7 +66,7 @@ _asm_int_\num:
 	SAVE_REGS
 	# Push pointer to top of stack
 	push %esp
-	call arch_x86_int_handler_default
+	call arch_x86_irq_handler_default
 	# Move stack pointer past our handler arg
 	addl $4, %esp
 	# Notify PIC1/PIC2 that we've handled the interrupt

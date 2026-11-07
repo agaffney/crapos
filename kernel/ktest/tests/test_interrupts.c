@@ -72,8 +72,9 @@ KTEST(syscall_returns_to_caller)
  * The kernel selector is put back before leaving the asm block.
  *
  * The hook only records state and must stay that way: it runs for every
- * interrupt. It is called from arch_x86_int_handler_default() and
- * arch_x86_int_handler_syscall(), but not from the timer and keyboard stubs,
+ * interrupt. It is called from arch_x86_irq_handler_default(),
+ * arch_x86_cpu_exception_handler_default() and arch_x86_int_handler_syscall(),
+ * but not from the timer and keyboard stubs,
  * which have their own handlers. So those two are not covered by the segment
  * register checks, and nor is the syscall stub, because the checks below only
  * run for vectors 34-47.
@@ -87,11 +88,24 @@ _Static_assert(KERNEL_DATA_SEL == 0x10, "SAVE_REGS loads a different selector th
 /* Segment registers as seen from inside the interrupt handler */
 static volatile uint16_t hook_ds, hook_es, hook_fs, hook_gs;
 static volatile uint32_t hook_vector;
+/*
+ * The vector a test is about to trigger on purpose, or -1 for none. The hook
+ * reports an interrupt with exactly this vector as expected, once, so the CPU
+ * exception handler returns from it instead of halting. Any other exception,
+ * including a different one that arrives while a test is armed, is not
+ * expected: it halts the machine with a report.
+ */
+static volatile int hook_expect_vector = -1;
 /* The frame the handler was given */
 static arch_x86_int_frame hook_frame;
 
-void ktest_int_hook(uint32_t vector, const arch_x86_int_frame * frame)
+/*
+ * Records the segment registers, vector and frame seen inside the interrupt
+ * handler, and tells the handler whether the test expected this interrupt.
+ */
+int ktest_int_hook(uint32_t vector, const arch_x86_int_frame * frame)
 {
+	int expected = ((int)vector == hook_expect_vector);
 	uint16_t ds, es, fs, gs;
 	asm volatile ("movw %%ds, %0" : "=r" (ds));
 	asm volatile ("movw %%es, %0" : "=r" (es));
@@ -103,6 +117,10 @@ void ktest_int_hook(uint32_t vector, const arch_x86_int_frame * frame)
 	hook_gs = gs;
 	hook_vector = vector;
 	hook_frame = *frame;
+	if (expected) {
+		hook_expect_vector = -1;
+	}
+	return expected;
 }
 
 #define IRQ_STUB_RETURNS_TEST(vec) \
@@ -203,6 +221,10 @@ _Static_assert(sizeof(arch_x86_int_frame) == 68, "frame layout");
  * The data segment registers get four different values so a stub that stores
  * them in the wrong order shows up.
  *
+ * Many of these vectors are fatal exceptions, which the CPU exception handler
+ * halts on. The test sets hook_expect_vector first, which makes the handler
+ * return from that one vector.
+ *
  * This checks the stubs' stack layout, and that is all. A software "int 2" is
  * not a real NMI and the jump for vector 8 is not a double fault, so delivery
  * of real faults (the CPU choosing the vector, pushing the frame, switching
@@ -259,6 +281,7 @@ static void __attribute__((noinline)) dirty_stack(void)
 		memset(&hook_frame, 0xff, sizeof(hook_frame)); \
 		IRQ_GUARD(irq_flags); \
 		dirty_stack(); \
+		hook_expect_vector = expected_vector; \
 		asm volatile ( \
 			"movw %[dsel], %%ds\n\t" \
 			"movw %[esel], %%es\n\t" \
@@ -283,6 +306,7 @@ static void __attribute__((noinline)) dirty_stack(void)
 			: [dsel] "m" (dsel), [esel] "m" (esel), [fsel] "m" (fsel), [gsel] "m" (gsel), \
 			  [ksel] "m" (kernel_sel) \
 			: "memory"); \
+		hook_expect_vector = -1; \
 		/* First, so that "the stub never ran" is not reported as a bad field */ \
 		KTEST_ASSERT_EQ_INT(hook_frame.vector, expected_vector); \
 		KTEST_ASSERT_EQ_INT(hook_frame.error_code, expected_error); \
@@ -414,4 +438,53 @@ KTEST(syscall_frame_has_number_and_result_replaces_eax)
 		return;
 	}
 	KTEST_ASSERT_EQ_INT(eax, hook_syscall_result);
+}
+
+/*
+ * Which CPU exception vectors the handler returns from: debug, NMI, breakpoint
+ * and overflow. Every other CPU exception is fatal, divide error (0) included,
+ * and vectors that are not CPU exceptions never are. This is only the decision.
+ * The halt itself stops the machine, so it is checked by the halt selftests in
+ * test_selftest.c instead (make kernel-test-qemu-selftest).
+ */
+KTEST(cpu_exception_policy_is_fatal_for_faults_and_aborts)
+{
+	uint32_t vector;
+	for (vector = 0; vector < 32; vector++) {
+		int fatal = !(vector >= 1 && vector <= 4);
+		KTEST_ASSERT_EQ_INT(arch_x86_cpu_exception_is_fatal(vector), fatal);
+	}
+	KTEST_ASSERT_EQ_INT(arch_x86_cpu_exception_is_fatal(32), 0);
+	KTEST_ASSERT_EQ_INT(arch_x86_cpu_exception_is_fatal(47), 0);
+	KTEST_ASSERT_EQ_INT(arch_x86_cpu_exception_is_fatal(0x80), 0);
+}
+
+/*
+ * The names the fatal exception report prints, for every CPU exception vector.
+ * A shifted or missing entry in the table would put the wrong name on a report,
+ * and the halt selftests only look at two vectors.
+ */
+KTEST(cpu_exception_names_match_vectors)
+{
+	static const char * const expected[32] = {
+		"divide error", "debug", "non-maskable interrupt", "breakpoint",
+		"overflow", "bound range exceeded", "invalid opcode", "device not available",
+		"double fault", "coprocessor segment overrun", "invalid TSS", "segment not present",
+		"stack-segment fault", "general protection fault", "page fault", "reserved",
+		"x87 floating-point error", "alignment check", "machine check", "SIMD floating-point error",
+		"virtualization exception", "control protection exception", "reserved", "reserved",
+		"reserved", "reserved", "reserved", "reserved",
+		"hypervisor injection exception", "VMM communication exception", "security exception", "reserved",
+	};
+	uint32_t vector;
+	for (vector = 0; vector < 32; vector++) {
+		const char * got = arch_x86_cpu_exception_name(vector);
+		size_t len = strlen(expected[vector]);
+		if (strlen(got) != len || memcmp(got, expected[vector], len) != 0) {
+			KTEST_FAIL("vector %d: got \"%s\", expected \"%s\"\n", vector, got, expected[vector]);
+			return;
+		}
+	}
+	/* Not a CPU exception: no valid index into the table */
+	KTEST_ASSERT_TRUE(strlen(arch_x86_cpu_exception_name(32)) > 0);
 }

@@ -66,11 +66,30 @@ typedef struct {
 } arch_x86_int_frame;
 
 /*
- * Called at the start of arch_x86_int_handler_default() and
- * arch_x86_int_handler_syscall(), with the vector number and the frame the
- * handler was given. Only defined by the in-kernel tests (KTEST=1 builds),
- * which use it to look at the CPU state inside a handler.
+ * Called at the start of arch_x86_irq_handler_default(),
+ * arch_x86_cpu_exception_handler_default() and arch_x86_int_handler_syscall(),
+ * with the vector number and the frame the handler was given. Only defined by
+ * the in-kernel tests (KTEST=1 builds), which use it to look at the CPU state
+ * inside a handler.
+ *
+ * Returns non-zero when the test caused this interrupt on purpose and wants it
+ * handled as recoverable, which stops the CPU exception handler halting the
+ * machine on a fatal vector. The other handlers ignore it.
  */
-void ktest_int_hook(uint32_t vector, const arch_x86_int_frame * frame);
+int ktest_int_hook(uint32_t vector, const arch_x86_int_frame * frame);
 
-void arch_x86_int_handler_default(const arch_x86_int_frame *);
+void arch_x86_irq_handler_default(const arch_x86_int_frame *);
+
+void arch_x86_cpu_exception_handler_default(const arch_x86_int_frame *);
+
+/*
+ * Whether returning from a CPU exception vector is wrong: see int.c. Only CPU
+ * exceptions (vectors 0-31) can be fatal, so this is 0 for any other vector.
+ */
+int arch_x86_cpu_exception_is_fatal(uint32_t vector);
+
+/* The name of a CPU exception vector, for reports. Only vectors 0-31 have one. */
+const char * arch_x86_cpu_exception_name(uint32_t vector);
+
+/* Log every field of an interrupt frame on one debug line */
+void arch_x86_int_debug_frame(const arch_x86_int_frame *);
