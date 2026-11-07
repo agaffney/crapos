@@ -116,7 +116,8 @@ void idt_init(void) {
 	uint8_t foo;
 	foo = inb(PIC1_DATA_ADDR);
 	kdebug("current interrupt mask = %08b\n", foo);
-	outb(PIC1_DATA_ADDR, PIC_IRQ1 & PIC_IRQ2 & PIC_IRQ3 & PIC_IRQ4 & PIC_IRQ7);
+	outb(PIC1_DATA_ADDR, 0x0);
+	outb(PIC2_DATA_ADDR, 0x0);
 	foo = inb(PIC1_DATA_ADDR);
 	kdebug("new interrupt mask = %08b\n", foo);
 }
