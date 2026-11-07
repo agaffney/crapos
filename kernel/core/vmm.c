@@ -32,7 +32,7 @@ void * kmalloc(size_t len, uint8_t flags) {
 			vmm_page * new_page;
 			// Add 4 more free pages
 			for (i = 0; i < 4; i++) {
-				new_page = kmalloc(sizeof(vmm_page), KMALLOC_ZERO & KMALLOC_ATOMIC);
+				new_page = kmalloc(sizeof(vmm_page), KMALLOC_ZERO | KMALLOC_ATOMIC);
 				new_page->phys_addr = arch_vmm_next_phys_page();
 				new_page->virt_addr = NULL;
 				new_page->remain = PAGE_SIZE;
