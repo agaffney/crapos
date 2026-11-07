@@ -1,6 +1,7 @@
 #include <arch/x86/idt.h>
 #include <arch/x86/int.h>
 #include <arch/x86/io.h>
+#include <arch/x86/pic.h>
 #include <core/kprint.h>
 
 // ktest_int_hook only exists in KTEST=1 builds; weak, so it is null otherwise
@@ -16,13 +17,18 @@ void arch_x86_irq_handler_default(const arch_x86_int_frame * f) {
 	if (ktest_int_hook) {
 		ktest_int_hook(f->vector, f);
 	}
+	/* IRQ 0-15 map to vectors 0x20-0x2f (master 0x20-0x27, slave 0x28-0x2f) */
+	if (f->vector >= PIC1_OFFSET_ADDR && f->vector < PIC1_OFFSET_ADDR + 16) {
+		uint8_t irq = f->vector - PIC1_OFFSET_ADDR;
+		/* IRQ 7 and 15 can be spurious (nothing in service); log those separately */
+		if (arch_x86_pic_irq_is_spurious(irq)) {
+			kdebug("spurious IRQ %d\n", irq);
+			return;
+		}
+		kdebug("IRQ %d\n", irq);
+	}
 	kdebug("received interrupt %d, with error %d\n", f->vector, f->error_code);
 	arch_x86_int_debug_frame(f);
-	if(f->vector >= PIC2_OFFSET_ADDR) {
-		kdebug("IRQ %d\n", f->vector - PIC2_OFFSET_ADDR + 8);
-	} else if(f->vector >= PIC1_OFFSET_ADDR) {
-		kdebug("IRQ %d\n", f->vector - PIC1_OFFSET_ADDR);
-	}
 }
 
 // Names of the CPU exceptions, indexed by vector

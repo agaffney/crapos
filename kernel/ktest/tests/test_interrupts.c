@@ -1,34 +1,43 @@
 #include <arch/x86/gdt.h>
 #include <arch/x86/int.h>
 #include <arch/x86/syscall.h>
+#include <ktest/irq_guard.h>
 #include <ktest/ktest.h>
 #include <libk/string.h>
 #include <stddef.h>
 #include <stdint.h>
 
-/*
- * Interrupts are turned off around the tests that load unusual segment
- * selectors, so a real IRQ can't arrive in the middle. IRQ_GUARD(name) turns
- * them off and, through the cleanup attribute, puts the interrupt flag back to
- * what it was when the variable goes out of scope, on every way out of the
- * test: normal end, or an assertion returning early.
- */
-static inline uint32_t irq_save_disable(void)
+static int interrupts_are_on(void)
 {
 	uint32_t flags;
-	asm volatile ("pushf\n\tpopl %0\n\tcli" : "=r" (flags) : : "memory");
-	return flags;
+	asm volatile ("pushf\n\tpopl %0" : "=r" (flags));
+	return (flags & (1 << 9)) != 0;
 }
 
-static inline void irq_restore(uint32_t * flags)
+/*
+ * The IRQ flag helpers put the flag back exactly: off if it was off, on if it
+ * was on. The timer tests turn interrupts on and rely on the restore turning
+ * them off again.
+ */
+KTEST(irq_flag_helpers_restore_the_previous_state)
 {
-	if (*flags & (1 << 9)) {
-		asm volatile ("sti" : : : "memory");
-	}
-}
+	uint32_t outer __attribute__((cleanup(ktest_irq_restore))) = ktest_irq_save_disable();
+	uint32_t flags;
 
-#define IRQ_GUARD(name) \
-	uint32_t name __attribute__((cleanup(irq_restore))) = irq_save_disable()
+	/* Was off: enabling turns them on, and the restore turns them off again */
+	flags = ktest_irq_save_enable();
+	KTEST_ASSERT_TRUE(interrupts_are_on());
+	ktest_irq_restore(&flags);
+	KTEST_ASSERT_TRUE(!interrupts_are_on());
+
+	/* Was on: disabling turns them off, and the restore turns them on again */
+	asm volatile ("sti" : : : "memory");
+	flags = ktest_irq_save_disable();
+	KTEST_ASSERT_TRUE(!interrupts_are_on());
+	ktest_irq_restore(&flags);
+	KTEST_ASSERT_TRUE(interrupts_are_on());
+	(void)outer;
+}
 
 /* A breakpoint exception (vector 3) is handled and execution continues after it. */
 KTEST(int3_returns_to_caller)
@@ -56,8 +65,9 @@ KTEST(syscall_returns_to_caller)
  * PIC itself (the cascade setup, or EOI delivery for a real IRQ). Vector 32 is
  * the timer stub and 33 is the keyboard wrapper, which have their own handlers.
  *
- * The general registers are set to known values. The stubs overwrite al for
- * the EOI, so eax checks that RESTORE_REGS really restores it. ebp is left out
+ * The general registers are set to known values. The stubs call C code (the
+ * handler, and the EOI), which may change eax, so eax checks that RESTORE_REGS
+ * really restores it. ebp is left out
  * because the compiler needs it as the frame pointer.
  *
  * The data segment registers always hold the kernel data selector when a stub

@@ -130,19 +130,20 @@ test-qemu-selftest:
 # The output is shown as it arrives and also kept, so that a timeout can say
 # which test was running and show how the output ended.
 ktest-run: $(OUTPUT)
-	@log=$$(mktemp); stfile=$$(mktemp); \
-	{ timeout $(KTEST_TIMEOUT) $(QEMU_SYSTEM) $(KTEST_QEMU_OPTS) -append "ktest$${KTEST_FILTER:+=$$KTEST_FILTER}" </dev/null; echo $$? >$$stfile; } | tee $$log; \
-	status=$$(cat $$stfile); \
+	@log=$$(mktemp); stfile=$$(mktemp); trap 'rm -f "$$log" "$$stfile"' EXIT; \
+	trap 'exit 1' INT TERM HUP; \
+	{ timeout $(KTEST_TIMEOUT) $(QEMU_SYSTEM) $(KTEST_QEMU_OPTS) -append "ktest$${KTEST_FILTER:+=$$KTEST_FILTER}" </dev/null; echo $$? >"$$stfile"; } | tee "$$log"; \
+	status=$$(cat "$$stfile"); \
 	if [ $$status -eq 33 ]; then \
-		rm -f $$log $$stfile; echo "ktest: PASS"; \
+		rm -f "$$log" "$$stfile"; echo "ktest: PASS"; \
 	elif [ $$status -eq 124 ]; then \
 		echo "ktest: FAIL (timed out after $(KTEST_TIMEOUT)s)"; \
-		last=$$(tr -d '\033' <$$log | sed -n 's/^ktest: running test //p' | tail -n 1); \
+		last=$$(tr -d '\033' <"$$log" | sed -n 's/^ktest: running test //p' | tail -n 1); \
 		[ -z "$$last" ] || echo "ktest: the last test started was $$last"; \
-		echo "ktest: the output ended with:"; tr -d '\033' <$$log | tail -n 8 | sed 's/^/  | /'; \
-		rm -f $$log $$stfile; exit 1; \
+		echo "ktest: the output ended with:"; tr -d '\033' <"$$log" | tail -n 8 | sed 's/^/  | /'; \
+		rm -f "$$log" "$$stfile"; exit 1; \
 	else \
-		rm -f $$log $$stfile; echo "ktest: FAIL (qemu exit status $$status)"; exit 1; \
+		rm -f "$$log" "$$stfile"; echo "ktest: FAIL (qemu exit status $$status)"; exit 1; \
 	fi
 
 # Each self-test must make the kernel exit with the failure status (35) and
@@ -160,19 +161,26 @@ ktest-selftest: $(OUTPUT)
 	done; \
 	\
 	[ -n "$(KTEST_HALT_SELFTESTS)" ] || { echo "ktest: no halt selftests found"; exit 1; }; \
+	log=; pid=; \
+	trap 'rm -f "$$log"; [ -z "$$pid" ] || kill $$pid 2>/dev/null' EXIT; \
+	trap 'exit 1' INT TERM HUP; \
 	for t in $(KTEST_HALT_SELFTESTS); do \
 		log=$$(mktemp); \
-		timeout $(KTEST_HALT_TIMEOUT) $(QEMU_SYSTEM) $(KTEST_QEMU_OPTS) -append "ktest=$$t" </dev/null >$$log 2>&1 & \
+		timeout $(KTEST_HALT_TIMEOUT) $(QEMU_SYSTEM) $(KTEST_QEMU_OPTS) -append "ktest=$$t" </dev/null >"$$log" 2>&1 & \
 		pid=$$!; \
-		while kill -0 $$pid 2>/dev/null && ! grep -q "^System halted" $$log; do sleep 0.2; done; \
-		kill $$pid 2>/dev/null; wait $$pid 2>/dev/null; \
-		out=$$(tr -d '\033' <$$log | grep -v "^qemu-system.*terminating on signal"); rm -f $$log; \
+		while kill -0 $$pid 2>/dev/null && ! grep -q "^System halted" "$$log"; do sleep 0.2; done; \
+		kill $$pid 2>/dev/null; wait $$pid 2>/dev/null; pid=; \
+		out=$$(tr -d '\033' <"$$log" | grep -v "^qemu-system.*terminating on signal"); rm -f "$$log"; log=; \
+		empty=$$(echo "$$out" | grep -cE '^ktest-expect:[[:space:]]*$$'); \
 		expects=$$(echo "$$out" | sed -n 's/^ktest-expect: //p'); \
 		body=$$(echo "$$out" | grep -v "^ktest-expect: "); \
-		missing=$$(echo "$$expects" | while IFS= read -r want; do echo "$$body" | grep -qF -- "$$want" || echo "$$want"; done); \
-		if [ -z "$$expects" ] || [ -n "$$missing" ] || ! echo "$$body" | grep -q "^System halted"; then \
+		missing=$$(echo "$$expects" | while IFS= read -r want; do \
+				echo "$$body" | grep -qF -- "$$want" || echo "$$want"; \
+			done); \
+		if [ -z "$$expects" ] || [ "$$empty" -ne 0 ] || [ -n "$$missing" ] || ! echo "$$body" | grep -q "^System halted"; then \
 			echo "ktest: halt selftest $$t did not halt as expected"; \
 			[ -n "$$expects" ] || echo "the test printed no 'ktest-expect:' lines"; \
+			[ "$$empty" -eq 0 ] || echo "$$empty ktest-expect line(s) have no text, which would match anything"; \
 			[ -z "$$missing" ] || { echo "missing from the output:"; echo "$$missing" | sed 's/^/  | /'; }; \
 			echo "$$out"; exit 1; \
 		fi; \
