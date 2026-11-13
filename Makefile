@@ -2,6 +2,11 @@
 
 all: kernel libc
 
+# The kernel build already builds libc's libk.a, which the 'libc' target builds
+# too. Run them one after the other, or a parallel make runs two builds of the
+# same files at once.
+.NOTPARALLEL: all
+
 # Top-level kernel targets
 .PHONY: kernel kernel-%
 

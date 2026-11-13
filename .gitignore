@@ -5,3 +5,6 @@ kernel/kernel.sym
 kernel/kernel-ktest
 kernel/kernel-ktest.sym
 tests/*/build/
+*.[cSs].d
+*.libk.d
+*.flags-*

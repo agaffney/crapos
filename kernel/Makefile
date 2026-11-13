@@ -16,6 +16,13 @@ endif
 all: $(OUTPUT)
 
 KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
+# The flags every object is compiled with (see flags_stamp in common.mk)
+FLAGS_STAMP_CONTENT = $(CC) $(KERNEL_CFLAGS) $(DEPFLAGS)
+$(eval $(call flags_stamp,FLAGS_STAMP,build,FLAGS_STAMP_CONTENT))
+# The same for the link command, kept apart so that a linker-only change relinks
+# the kernel without recompiling anything
+LINK_STAMP_CONTENT = $(LD) $(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
+$(eval $(call flags_stamp,LINK_STAMP,build.link,LINK_STAMP_CONTENT))
 LIBK_OBJ = $(BASEDIR)/libc/libk.a
 
 # Serial console only
@@ -27,28 +34,47 @@ QEMU_DEBUG_OPTS = -s -S
 # Debug device that allows kernel to trigger a qemu exit
 QEMU_TEST_OPTS = -device isa-debug-exit,iobase=0xf4,iosize=0x04
 
-$(OUTPUT): $(KERNEL_OBJS) $(LIBK_OBJ)
+$(OUTPUT): $(KERNEL_OBJS) $(LIBK_OBJ) $(LINK_STAMP) $(KERNEL_ARCHDIR)/link.ld
 	$(LD) $(LDFLAGS) $(KERNEL_ARCH_LDFLAGS) -o $@ $(KERNEL_OBJS) $(LIBK_OBJ)
 	$(OBJCOPY) --only-keep-debug $@ $(@).sym
 	# Disable stripping for easier debugging later
 	#$(STRIP) $(OUTPUT)
 
+# Delete exactly the files the build generates (objects and their .d files, see
+# DEPFLAGS in common.mk), not everything with a .d extension
 clean:
-	find . -name '*.o' -delete
-	rm -f kernel kernel.sym kernel-ktest kernel-ktest.sym
+	find . \( -name '*.o' -o -name '*.[cSs].d' \) -delete
+	rm -f kernel kernel.sym kernel-ktest kernel-ktest.sym build.flags-* build.link.flags-*
 
-$(LIBK_OBJ):
+# libk.a is built by the libc Makefile, which knows its own sources, headers
+# and flags. FORCE runs that sub-make on every build, where it does nothing if
+# libk.a is up to date. The kernel is only relinked when the sub-make really
+# changed libk.a, because make looks at the file's timestamp again afterwards.
+# Because make can't know that without running the sub-make, make -n lists the
+# kernel link as needed and make -q always says it is out of date; the object
+# files are reported correctly.
+.PHONY: FORCE
+FORCE:
+
+$(LIBK_OBJ): FORCE
 	$(MAKE) -C $(BASEDIR)/libc libk.a
 
-%.c.o: %.c
-	$(CC) -c -o $@ $< $(KERNEL_CFLAGS)
+# Each object also depends on the recorded flags, so a flag change rebuilds it
+%.c.o: %.c $(FLAGS_STAMP)
+	$(CC) -c -o $@ $< $(KERNEL_CFLAGS) $(DEPFLAGS)
 
-%.s.o: %.s
-	$(CC) -c -o $@ $< $(KERNEL_CFLAGS)
+# .s files are not run through the C preprocessor, so the compiler's -MMD has no
+# header list to give. The assembler writes its own for .include files instead.
+# That is a GNU as option, so another assembler would need something else here.
+%.s.o: %.s $(FLAGS_STAMP)
+	$(CC) -c -o $@ $< $(KERNEL_CFLAGS) -Wa,-MD,$(@:.o=.d)
 
 # .S files are run through the C preprocessor first, so they can #include headers
-%.S.o: %.S
-	$(CC) -c -o $@ $< $(KERNEL_CFLAGS)
+%.S.o: %.S $(FLAGS_STAMP)
+	$(CC) -c -o $@ $< $(KERNEL_CFLAGS) $(DEPFLAGS)
+
+# Header dependencies written by the compiler (missing on the first build)
+-include $(KERNEL_OBJS:.o=.d)
 
 .PHONY: run run-debug
 
