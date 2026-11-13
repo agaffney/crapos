@@ -44,7 +44,25 @@ LIB_CFLAGS := -std=gnu11 -g -O0 -Wall $(SAN_FLAGS) \
 # Harness: ordinary hosted program, no renaming.
 HOST_CFLAGS := -std=gnu11 -g -O0 -Wall $(SAN_FLAGS) -I $(COMMON)
 
-COMMON_DEPS := $(COMMON)/rename.h $(COMMON)/harness.h
+# Flags used for every object. Changing them (SAN=0, say) must rebuild the
+# objects, so each object depends on a file whose name contains a checksum of
+# the flags. A new set of flags is a file that doesn't exist yet, which the rule
+# below creates (newer than the objects) after deleting the old ones. Nothing is
+# written while make reads the Makefile, so make -n is accurate. The flags go to
+# the shell in single quotes, with any quote inside them escaped. The headers
+# each object includes are tracked through the .d files that -MMD -MP write next
+# to the objects.
+FLAGS_CONTENT := $(CC) $(LIB_CFLAGS) | $(HOST_CFLAGS)
+FLAGS_FILE := $(BUILD)/build.flags-$(shell printf '%s' '$(subst ','\'',$(FLAGS_CONTENT))' | sha1sum | cut -d' ' -f1)
+DEPFLAGS := -MMD -MP
+
+# The rule below must not become the default target
+.DEFAULT_GOAL := all
+
+$(FLAGS_FILE):
+	@mkdir -p $(BUILD)
+	@rm -f $(BUILD)/build.flags-*
+	@touch $@
 
 LIBC_SRCS := $(shell find $(LIBC_DIR) -name '*.c')
 LIBC_OBJS := $(patsubst $(LIBC_DIR)/%.c,$(BUILD)/libc/%.o,$(LIBC_SRCS))
@@ -70,21 +88,23 @@ $(LIBC_ARCHIVE): $(LIBC_OBJS)
 	rm -f $@
 	ar rcs $@ $^
 
-$(BUILD)/libc/%.o: $(LIBC_DIR)/%.c $(COMMON_DEPS)
+$(BUILD)/libc/%.o: $(LIBC_DIR)/%.c $(FLAGS_FILE)
 	@mkdir -p $(dir $@)
-	$(CC) $(LIB_CFLAGS) -c -o $@ $<
+	$(CC) $(LIB_CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(BUILD)/unit/%.o: $(ROOT)/%.c $(COMMON_DEPS)
+$(BUILD)/unit/%.o: $(ROOT)/%.c $(FLAGS_FILE)
 	@mkdir -p $(dir $@)
-	$(CC) $(LIB_CFLAGS) -c -o $@ $<
+	$(CC) $(LIB_CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(BUILD)/%.o: %.c $(COMMON_DEPS)
+$(BUILD)/%.o: %.c $(FLAGS_FILE)
 	@mkdir -p $(dir $@)
-	$(CC) $(LIB_CFLAGS) -c -o $@ $<
+	$(CC) $(LIB_CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(BUILD)/harness.o: $(COMMON)/harness.c $(COMMON)/harness.h
+$(BUILD)/harness.o: $(COMMON)/harness.c $(FLAGS_FILE)
 	@mkdir -p $(dir $@)
-	$(CC) $(HOST_CFLAGS) -c -o $@ $<
+	$(CC) $(HOST_CFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+-include $(LIBC_OBJS:.o=.d) $(TEST_OBJS:.o=.d) $(UNIT_OBJS:.o=.d) $(BUILD)/harness.d
 
 clean:
 	rm -rf $(BUILD)
