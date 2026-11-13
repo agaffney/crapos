@@ -19,7 +19,9 @@ static volatile uint8_t probe_isr[2];
 void ktest_pic_command_hook(uint16_t port, uint8_t value)
 {
 	IRQ_GUARD(irq_flags);
-	uint32_t n;
+	uint32_t n, flags;
+
+	asm volatile ("pushf\n\tpopl %0" : "=r" (flags));
 
 	/* The probe's own reads come through here too, and are not logged */
 	if (probe_running) {
@@ -29,6 +31,7 @@ void ktest_pic_command_hook(uint16_t port, uint8_t value)
 	if (n < PIC_LOG_SIZE) {
 		pic_writes[n].port = port;
 		pic_writes[n].value = value;
+		pic_writes[n].df = (flags >> 10) & 1;
 	}
 	log_len = n + 1;
 

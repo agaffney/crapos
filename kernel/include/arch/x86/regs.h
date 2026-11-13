@@ -32,6 +32,11 @@
 	mov %bx, %fs
 	mov %bx, %gs
 	pop %ebx
+	# The C ABI needs the direction flag clear whenever a function is called.
+	# The interrupted code may have left it set, and an interrupt gate clears
+	# only IF and TF, so clear it here. The iret restores the interrupted
+	# code's flags, so it gets its own direction flag back.
+	cld
 .endm
 
 # Macro to restore general/segment registers from stack when returning from

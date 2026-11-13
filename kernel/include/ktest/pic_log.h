@@ -13,6 +13,8 @@
 struct pic_write {
 	uint16_t port;
 	uint8_t value;
+	/* The direction flag as the hook saw it, 0 or 1. The C ABI needs it clear. */
+	uint8_t df;
 };
 
 /*
