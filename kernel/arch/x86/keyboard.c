@@ -1,6 +1,7 @@
 #include <arch/x86/idt.h>
 #include <arch/x86/io.h>
 #include <arch/x86/keyboard.h>
+#include <arch/x86/pic.h>
 #include <arch/x86/keyboard_map.h>
 #include <core/keyboard.h>
 
@@ -18,7 +19,7 @@ void x86_keyboard_handler(void) {
 	int modifier = 0;
 
 	/* write EOI */
-	outb(PIC1_COMMAND_ADDR, PIC_EOI_ACK);
+	arch_x86_pic_send_eoi(1);
 
 	while(1) {
 		status = inb(KEYBOARD_STATUS_PORT);

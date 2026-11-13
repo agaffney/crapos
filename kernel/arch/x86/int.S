@@ -47,8 +47,9 @@ _asm_int_\num:
 	# Move stack pointer past our handler arg
 	addl $4, %esp
 	# Notify PIC1 that we've handled the interrupt
-	movb $0x20, %al
-	outb %al, $0x20
+	pushl $(\num - 32)
+	call arch_x86_pic_send_eoi
+	addl $4, %esp
 	RESTORE_REGS
 	# Move stack pointer past vector and error code
 	addl $8, %esp
@@ -69,12 +70,11 @@ _asm_int_\num:
 	call arch_x86_irq_handler_default
 	# Move stack pointer past our handler arg
 	addl $4, %esp
-	# Notify PIC1/PIC2 that we've handled the interrupt
-	movb $0x20, %al
-	# Notify PIC2 (slave)
-	outb %al, $0xa0
-	# Notify PIC1 (master)
-	outb %al, $0x20
+	# Notify the PICs that we've handled the interrupt (slave first, then
+	# master, unless it was spurious)
+	pushl $(\num - 32)
+	call arch_x86_pic_send_eoi
+	addl $4, %esp
 	RESTORE_REGS
 	# Move stack pointer past vector and error code
 	addl $8, %esp
