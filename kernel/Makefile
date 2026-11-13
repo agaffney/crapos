@@ -16,6 +16,13 @@ endif
 all: $(OUTPUT)
 
 KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
+# The tests for the architecture being built are in tests/arch/$(ARCH)
+KTEST_ARCH_TESTS_DIR = ktest/tests/arch/$(ARCH)
+ifeq ($(KTEST),1)
+# ktest/tests is searched recursively, so it also finds the tests under
+# tests/arch for every architecture. Drop those and add the ones for $(ARCH).
+KERNEL_OBJS := $(filter-out ktest/tests/arch/%,$(KERNEL_OBJS)) $(call generate_obj_list,$(KTEST_ARCH_TESTS_DIR))
+endif
 # The flags every object is compiled with (see flags_stamp in common.mk)
 FLAGS_STAMP_CONTENT = $(CC) ($(CC_VERSION)) $(KERNEL_CFLAGS) $(DEPFLAGS)
 $(eval $(call flags_stamp,FLAGS_STAMP,build,FLAGS_STAMP_CONTENT))
@@ -110,7 +117,7 @@ export KTEST_FILTER
 # KTEST(...) line must hold the whole test name. It is a relative path, like
 # every other path in this Makefile, so make has to run in kernel/ (the root
 # Makefile does that with -C).
-KTEST_ALL_SELFTESTS = $(shell sed -n 's/^[[:space:]]*KTEST([[:space:]]*\(selftest_[A-Za-z0-9_]*\)[[:space:]]*).*/\1/p' ktest/tests/*.c)
+KTEST_ALL_SELFTESTS = $(shell sed -n 's/^[[:space:]]*KTEST([[:space:]]*\(selftest_[A-Za-z0-9_]*\)[[:space:]]*).*/\1/p' ktest/tests/*.c $(KTEST_ARCH_TESTS_DIR)/*.c)
 # selftest_halt_vector_<N>_* hang the kernel on purpose, the rest fail an assertion
 KTEST_HALT_SELFTESTS = $(filter selftest_halt_vector_%,$(KTEST_ALL_SELFTESTS))
 KTEST_SELFTESTS = $(filter-out selftest_halt_vector_%,$(KTEST_ALL_SELFTESTS))
