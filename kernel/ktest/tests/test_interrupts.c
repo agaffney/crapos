@@ -271,7 +271,8 @@ _Static_assert(sizeof(arch_x86_int_frame) == 68, "frame layout");
  */
 static void __attribute__((noinline)) dirty_stack(void)
 {
-	volatile uint32_t scratch[256];
+	/* Only written, on purpose: the stores are what dirty the stack */
+	volatile uint32_t scratch[256] __attribute__((unused));
 	int i;
 	for (i = 0; i < 256; i++) {
 		scratch[i] = 0xffffffff;
