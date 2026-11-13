@@ -23,6 +23,12 @@ CFLAGS ?= -ggdb -O0 -Wall
 # stop the build with "no rule to make target".
 DEPFLAGS := -MMD -MP
 
+# The first line of each tool's --version output. It goes into the flags files
+# below, so that upgrading the compiler or the linker rebuilds what it built even
+# when its path and the flags are the same.
+CC_VERSION := $(shell $(CC) --version 2>&1 | head -n 1)
+LD_VERSION := $(shell $(LD) --version 2>&1 | head -n 1)
+
 # Plain `make` builds 'all', which every Makefile including this one defines.
 # Without this, the first rule a Makefile happens to define, such as the flags
 # file rule from flags_stamp below, would become the default target.

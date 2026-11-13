@@ -17,11 +17,11 @@ all: $(OUTPUT)
 
 KERNEL_OBJS = $(call generate_obj_list,$(SUBDIRS))
 # The flags every object is compiled with (see flags_stamp in common.mk)
-FLAGS_STAMP_CONTENT = $(CC) $(KERNEL_CFLAGS) $(DEPFLAGS)
+FLAGS_STAMP_CONTENT = $(CC) ($(CC_VERSION)) $(KERNEL_CFLAGS) $(DEPFLAGS)
 $(eval $(call flags_stamp,FLAGS_STAMP,build,FLAGS_STAMP_CONTENT))
 # The same for the link command, kept apart so that a linker-only change relinks
 # the kernel without recompiling anything
-LINK_STAMP_CONTENT = $(LD) $(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
+LINK_STAMP_CONTENT = $(LD) ($(LD_VERSION)) $(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 $(eval $(call flags_stamp,LINK_STAMP,build.link,LINK_STAMP_CONTENT))
 LIBK_OBJ = $(BASEDIR)/libc/libk.a
 
