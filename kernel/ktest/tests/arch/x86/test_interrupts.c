@@ -518,7 +518,7 @@ DF_STUB_TEST(keyboard_stub_clears_the_direction_flag, 33)
  * and overflow. Every other CPU exception is fatal, divide error (0) included,
  * and vectors that are not CPU exceptions never are. This is only the decision.
  * The halt itself stops the machine, so it is checked by the halt selftests in
- * test_selftest.c instead (make kernel-test-qemu-selftest).
+ * test_selftest_halt.c instead (make kernel-test-qemu-selftest).
  */
 KTEST(cpu_exception_policy_is_fatal_for_faults_and_aborts)
 {
