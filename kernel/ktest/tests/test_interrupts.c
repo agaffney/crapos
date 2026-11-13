@@ -3,6 +3,7 @@
 #include <arch/x86/syscall.h>
 #include <ktest/irq_guard.h>
 #include <ktest/ktest.h>
+#include <ktest/pic_log.h>
 #include <libk/string.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -98,6 +99,22 @@ _Static_assert(KERNEL_DATA_SEL == 0x10, "SAVE_REGS loads a different selector th
 /* Segment registers as seen from inside the interrupt handler */
 static volatile uint16_t hook_ds, hook_es, hook_fs, hook_gs;
 static volatile uint32_t hook_vector;
+/* The direction flag seen inside the handler: 0 or 1, or -1 before any interrupt */
+static volatile int hook_df = -1;
+/*
+ * The flags read straight after the interrupt returned, before the test clears
+ * the direction flag again. The stub sets DF=0 for the handler, but the code it
+ * interrupted must get its own DF=1 back when the iret restores its flags.
+ */
+volatile uint32_t ktest_flags_after_int;
+/*
+ * The asm below stores to it by name (popl ktest_flags_after_int), not through
+ * an "m" operand: the kernel is built as PIE, which makes the compiler address
+ * a static through %ebx, and these asm blocks use ebx for a test value. It
+ * needs external linkage for the asm to name it. The kernel is linked at fixed
+ * addresses, so the absolute reference is fine, as in timer.S.
+ */
+#define DF_AFTER_INT() ((ktest_flags_after_int >> 10) & 1)
 /*
  * The vector a test is about to trigger on purpose, or -1 for none. The hook
  * reports an interrupt with exactly this vector as expected, once, so the CPU
@@ -125,6 +142,9 @@ int ktest_int_hook(uint32_t vector, const arch_x86_int_frame * frame)
 	hook_es = es;
 	hook_fs = fs;
 	hook_gs = gs;
+	uint32_t flags;
+	asm volatile ("pushf\n\tpopl %0" : "=r" (flags));
+	hook_df = (flags >> 10) & 1;
 	hook_vector = vector;
 	hook_frame = *frame;
 	if (expected) {
@@ -142,6 +162,8 @@ int ktest_int_hook(uint32_t vector, const arch_x86_int_frame * frame)
 		uint16_t ds, es, fs, gs; \
 		/* Sentinels, so a hook that never ran can't leave stale values behind */ \
 		hook_vector = 0; \
+		hook_df = -1; \
+		ktest_flags_after_int = 0; \
 		hook_ds = hook_es = hook_fs = hook_gs = 0xffff; \
 		/* Keep a real IRQ from arriving while the selectors are unusual */ \
 		IRQ_GUARD(irq_flags); \
@@ -150,7 +172,11 @@ int ktest_int_hook(uint32_t vector, const arch_x86_int_frame * frame)
 			"movw %[tsel], %%es\n\t" \
 			"movw %[tsel], %%fs\n\t" \
 			"movw %[tsel], %%gs\n\t" \
+			"std\n\t" \
 			"int $" #vec "\n\t" \
+			"pushfl\n\t" \
+			"popl ktest_flags_after_int\n\t" \
+			"cld\n\t" \
 			"movw %%ds, %[ds]\n\t" \
 			"movw %%es, %[es]\n\t" \
 			"movw %%fs, %[fs]\n\t" \
@@ -166,6 +192,8 @@ int ktest_int_hook(uint32_t vector, const arch_x86_int_frame * frame)
 		/* Keep this first: it says "the hook never ran", which would otherwise \
 		   show up as confusing segment register mismatches below */ \
 		KTEST_ASSERT_EQ_INT(hook_vector, vec); \
+		KTEST_ASSERT_EQ_INT(hook_df, 0); \
+		KTEST_ASSERT_EQ_INT(DF_AFTER_INT(), 1); \
 		KTEST_ASSERT_EQ_INT(hook_ds, KERNEL_DATA_SEL); \
 		KTEST_ASSERT_EQ_INT(hook_es, KERNEL_DATA_SEL); \
 		KTEST_ASSERT_EQ_INT(hook_fs, KERNEL_DATA_SEL); \
@@ -290,6 +318,8 @@ static void __attribute__((noinline)) dirty_stack(void)
 		uint16_t ds, es, fs, gs; \
 		uint32_t after, esp_before, esp_after; \
 		memset(&hook_frame, 0xff, sizeof(hook_frame)); \
+		hook_df = -1; \
+		ktest_flags_after_int = 0; \
 		IRQ_GUARD(irq_flags); \
 		dirty_stack(); \
 		hook_expect_vector = expected_vector; \
@@ -300,8 +330,12 @@ static void __attribute__((noinline)) dirty_stack(void)
 			"movw %[gsel], %%gs\n\t" \
 			"movl $1f, %[after]\n\t" \
 			"movl %%esp, %[esp_before]\n\t" \
+			"std\n\t" \
 			trigger "\n\t" \
 			"1:\n\t" \
+			"pushfl\n\t" \
+			"popl ktest_flags_after_int\n\t" \
+			"cld\n\t" \
 			"movl %%esp, %[esp_after]\n\t" \
 			"movw %%ds, %[ds]\n\t" \
 			"movw %%es, %[es]\n\t" \
@@ -320,6 +354,8 @@ static void __attribute__((noinline)) dirty_stack(void)
 		hook_expect_vector = -1; \
 		/* First, so that "the stub never ran" is not reported as a bad field */ \
 		KTEST_ASSERT_EQ_INT(hook_frame.vector, expected_vector); \
+		KTEST_ASSERT_EQ_INT(hook_df, 0); \
+		KTEST_ASSERT_EQ_INT(DF_AFTER_INT(), 1); \
 		KTEST_ASSERT_EQ_INT(hook_frame.error_code, expected_error); \
 		KTEST_ASSERT_EQ_INT(hook_frame.eip, after); \
 		KTEST_ASSERT_EQ_INT(hook_frame.cs, KERNEL_CODE_SEL); \
@@ -421,12 +457,16 @@ KTEST(syscall_frame_has_number_and_result_replaces_eax)
 	int eax = SYSCALL_TEST_NUMBER, ebx = 0x11111111, ecx = 0x22222222;
 	int edx = 0x33333333, esi = 0x44444444, edi = 0x55555555;
 	hook_vector = 0;
+	hook_df = -1;
+	ktest_flags_after_int = 0;
 	hook_syscall_result = SYSCALL_RESULT_UNSET;
 	memset(&hook_frame, 0xff, sizeof(hook_frame));
-	asm volatile ("int $0x80"
+	asm volatile ("std\n\tint $0x80\n\tpushfl\n\tpopl ktest_flags_after_int\n\tcld"
 		: "+a" (eax), "+b" (ebx), "+c" (ecx), "+d" (edx), "+S" (esi), "+D" (edi)
 		: : "memory");
 	KTEST_ASSERT_EQ_INT(hook_vector, 0x80);
+	KTEST_ASSERT_EQ_INT(hook_df, 0);
+	KTEST_ASSERT_EQ_INT(DF_AFTER_INT(), 1);
 	KTEST_ASSERT_EQ_INT(hook_frame.vector, SYSCALL_TEST_NUMBER);
 	KTEST_ASSERT_EQ_INT(hook_frame.error_code, 0);
 	KTEST_ASSERT_EQ_INT(hook_frame.eax, SYSCALL_TEST_NUMBER);
@@ -450,6 +490,28 @@ KTEST(syscall_frame_has_number_and_result_replaces_eax)
 	}
 	KTEST_ASSERT_EQ_INT(eax, hook_syscall_result);
 }
+
+/*
+ * The timer stub (vector 32) and the keyboard wrapper (33) don't call
+ * ktest_int_hook, but both send an EOI, which the PIC command hook logs together
+ * with the direction flag it saw. Entered with a software "int", they run their
+ * real handlers: a stray tick, and a keyboard read that finds nothing.
+ */
+#define DF_STUB_TEST(test_name, vec) \
+	KTEST(test_name) \
+	{ \
+		IRQ_GUARD(irq_flags); \
+		pic_log_reset(); \
+		ktest_flags_after_int = 0; \
+		asm volatile ("std\n\tint $" #vec "\n\tpushfl\n\tpopl ktest_flags_after_int\n\tcld" \
+			: : : "memory"); \
+		KTEST_ASSERT_TRUE(pic_log_len() >= 1); \
+		KTEST_ASSERT_EQ_INT(pic_log_get(0).df, 0); \
+		KTEST_ASSERT_EQ_INT(DF_AFTER_INT(), 1); \
+	}
+
+DF_STUB_TEST(timer_stub_clears_the_direction_flag, 32)
+DF_STUB_TEST(keyboard_stub_clears_the_direction_flag, 33)
 
 /*
  * Which CPU exception vectors the handler returns from: debug, NMI, breakpoint
