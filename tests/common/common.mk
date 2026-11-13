@@ -13,6 +13,11 @@
 #   make ARGS='itoa'         e.g. run only tests with "itoa" in their name
 
 CC := cc
+
+# First line of the compiler's --version output. It goes into the flags file below,
+# so upgrading the compiler rebuilds the objects even though its path and the flags
+# are unchanged.
+CC_VERSION := $(shell $(CC) --version 2>&1 | head -n 1)
 SAN ?= 1
 
 ROOT := ../..
@@ -52,7 +57,7 @@ HOST_CFLAGS := -std=gnu11 -g -O0 -Wall $(SAN_FLAGS) -I $(COMMON)
 # the shell in single quotes, with any quote inside them escaped. The headers
 # each object includes are tracked through the .d files that -MMD -MP write next
 # to the objects.
-FLAGS_CONTENT := $(CC) $(LIB_CFLAGS) | $(HOST_CFLAGS)
+FLAGS_CONTENT := $(CC) ($(CC_VERSION)) $(LIB_CFLAGS) | $(HOST_CFLAGS)
 FLAGS_FILE := $(BUILD)/build.flags-$(shell printf '%s' '$(subst ','\'',$(FLAGS_CONTENT))' | sha1sum | cut -d' ' -f1)
 DEPFLAGS := -MMD -MP
 

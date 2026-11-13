@@ -2,15 +2,14 @@
 
 all: kernel libc
 
-# The kernel build already builds libc's libk.a, which the 'libc' target builds
-# too. Run them one after the other, or a parallel make runs two builds of the
-# same files at once.
-.NOTPARALLEL: all
-
 # Top-level kernel targets
 .PHONY: kernel kernel-%
 
-kernel:
+# The kernel links libc's libk.a, so build libc first. That way 'kernel' and
+# 'libc' don't both build libk.a at the same time under make -j. (The kernel-%
+# targets and make -C kernel still build it themselves, as they always did, so
+# naming one of those together with 'libc' under -j can still race.)
+kernel: libc
 	$(MAKE) -C kernel
 
 kernel-%:

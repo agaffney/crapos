@@ -6,8 +6,8 @@ LIBC_OBJS = $(call generate_obj_list)
 LIBK_OBJS = $(subst .o,.libk.o,$(LIBC_OBJS))
 # The flags for each variant of the library, recorded separately so changing
 # the kernel's flags doesn't rebuild the host library, and the other way round
-LIBC_STAMP_CONTENT = $(CC) $(CFLAGS) -D__is_libc $(DEPFLAGS)
-LIBK_STAMP_CONTENT = $(CC) $(KERNEL_CFLAGS) -I $(LIBC_INCLUDE_DIR) -D__is_libk $(DEPFLAGS)
+LIBC_STAMP_CONTENT = $(CC) ($(CC_VERSION)) $(CFLAGS) -D__is_libc $(DEPFLAGS)
+LIBK_STAMP_CONTENT = $(CC) ($(CC_VERSION)) $(KERNEL_CFLAGS) -I $(LIBC_INCLUDE_DIR) -D__is_libk $(DEPFLAGS)
 $(eval $(call flags_stamp,LIBC_STAMP,build.libc,LIBC_STAMP_CONTENT))
 $(eval $(call flags_stamp,LIBK_STAMP,build.libk,LIBK_STAMP_CONTENT))
 
